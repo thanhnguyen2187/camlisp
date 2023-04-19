@@ -1,0 +1,4 @@
+(executable
+ (public_name camlisp)
+ (name main)
+ (libraries camlisp))
