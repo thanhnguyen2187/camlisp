@@ -1,5 +1,3 @@
-exception InvalidCharacter of string
-
 module Tokenizer =
     struct
         type token =
