@@ -7,11 +7,16 @@ while true do
     let line = Tokenizer.strip_input line in
     if line != "" then
         let tokens = Tokenizer.tokenize line in
-        tokens
-        |> (fun tokens -> Parser.parse_one Parser.None_ tokens) 
-        |> Parser.to_string
-        |> print_string;
-
-    print_newline ();
+        Parser.parse tokens
+        |> Queue.to_seq
+        |> (fun nodes ->
+                Seq.iter (
+                    fun node ->
+                        Parser.to_string node
+                        |> print_string
+                        |> print_newline
+                ) nodes)
+        |> print_newline
+        ;
 done
 
