@@ -12,6 +12,8 @@ module Tokenizer =
                 print_string "<Closing Bracket: )>"
             | Word(expr) ->
                 print_string ("<Word: " ^ expr ^ ">")
+        let strip_input text =
+            Str.replace_first (Str.regexp "[ \t\r\n]*$") "" text
         let tokenize text =
             let queue = Queue.create() in
             let rec f expr text =
@@ -19,7 +21,7 @@ module Tokenizer =
             if n = 0 then
                 begin
                     if expr != ""
-                    then Queue.push (Word expr) queue;
+                    then Queue.add (Word expr) queue;
                     queue
                 end
             else
