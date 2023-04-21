@@ -8,9 +8,10 @@ while true do
     if line != "" then
         let tokens = Tokenizer.tokenize line in
         tokens
-        |> Parser.parse_one
+        |> (fun tokens -> Parser.parse_one Parser.None_ tokens) 
         |> Parser.to_string
         |> print_string;
-    ()
+
+    print_newline ();
 done
 
