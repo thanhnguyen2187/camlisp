@@ -73,11 +73,14 @@ module Parser =
             | Application(proc, params), Tokenizer.ClosingBracket ->
                 Application(proc, params)
             | _, _ -> failwith "parse_one unreachable code"
-            (* | Application(None_, _), Tokenizer.Word(expr) -> None_ *)
-            (* | Application(Symbol, params), Tokenizer.Word(expr) -> None_ *)
+        let parse tokens =
+            let rec f nodes tokens =
+                if (Queue.length tokens) = 0
+                then nodes
+                else
+                    let node = (parse_one None_ tokens) in
+                    Queue.add node nodes;
+                    f nodes tokens
+            in f (Queue.create ()) (Queue.copy tokens)
     end
 ;;
-
-
-(* Str.string_match (Str.regexp {|^[-+]?[0-9]+\.[0-9]+$|}) "12.24" 0;; *)
-Str.string_match (Str.regexp {|^[a-zA-Z][a-zA-Z0-9]*$|}) "abc" 0;;
