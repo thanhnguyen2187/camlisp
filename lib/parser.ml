@@ -8,8 +8,10 @@ module Parser =
             | NumberFloat of float
             | String_ of string
             | Symbol of string
+            | Sequence of node Queue.t
             | Application of node * node Queue.t
             | Define of string * node
+            | Func of node Queue.t * node Queue.t
         let rec to_string n =
             match n with
             | None_ -> "<Node None>"
@@ -23,6 +25,8 @@ module Parser =
             | Define (symbol, value)
                 -> "<Node Define: " ^ symbol ^ "; "
                 ^ (to_string value) ^ ">"
+            | Sequence (params) -> "<Node Sequence: " ^ to_string_nodes params ^ ">"
+            | _ -> "<Node undefined>"
         and to_string_nodes nodes =
             Queue.to_seq nodes
             |> (fun iters -> Seq.map to_string iters)
@@ -51,7 +55,7 @@ module Parser =
                 NumberFloat(float_of_string expr)
             | expr when Str.string_match string_regex expr 0 ->
                 (* skipping the first and last character of expr, for
-                   example `"something"` gets turned into `something` *)
+                   example, `"something"` gets turned into `something` *)
                 String_(String.sub expr 1 ((String.length expr) - 2))
             | expr when Str.string_match symbol_regex expr 0 ->
                 Symbol(expr)
@@ -61,29 +65,30 @@ module Parser =
             match curr, token with
             | None_, Tokenizer.Word(expr) -> parse_expr expr
             | None_, Tokenizer.OpeningBracket ->
-                let params = Queue.create () in
-                parse_one (Application (None_, params)) tokens
-            | Application(None_, params), Tokenizer.Word(expr) ->
-                let proc = parse_expr expr in
-                parse_one (Application (proc, params)) tokens
-            | Application(proc, params), Tokenizer.Word(expr) ->
-                let param = parse_expr expr in
-                Queue.add param params;
-                parse_one (Application (proc, params)) tokens
-            | Application(proc, params), Tokenizer.OpeningBracket ->
-                let appl = parse_one (Application (None_, Queue.create ())) tokens in
-                Queue.add appl params;
-                parse_one (Application (proc, params)) tokens
-            | Application(Symbol(expr), params), Tokenizer.ClosingBracket ->
-                if expr = "define"
-                then
-                    let param_1 = Queue.take_opt params in
-                    let param_2 = Queue.take_opt params in
-                    match param_1, param_2 with
-                    | Some(Symbol(name)), Some(node) -> Define (name, node)
-                    | _, _ -> failwith ("parse_one received invalid define " ^ to_string curr)
-                else
-                    curr
+                let nodes = Queue.create () in
+                parse_one (Sequence nodes) tokens
+            | Sequence (nodes), Tokenizer.Word(expr) ->
+                let node = parse_expr expr in
+                Queue.add node nodes;
+                parse_one curr tokens
+            | Sequence (nodes), Tokenizer.OpeningBracket ->
+                let appl = parse_one (Sequence (Queue.create ())) tokens in
+                Queue.add appl nodes;
+                parse_one curr tokens
+            | Sequence (nodes), Tokenizer.ClosingBracket ->
+                let first_node = Queue.take nodes in
+                begin
+                    match first_node with
+                    | Symbol("define") ->
+                        let param_1 = Queue.take_opt nodes in
+                        let param_2 = Queue.take_opt nodes in
+                        begin
+                            match param_1, param_2 with
+                            | Some(Symbol(name)), Some(node) -> Define (name, node)
+                            | _, _ -> failwith ("parse_one received invalid define " ^ to_string curr)
+                        end
+                    | _ -> Application(first_node, nodes)
+                end
             | _, _ -> failwith "parse_one unreachable code"
         let parse tokens =
             let rec f nodes tokens =
