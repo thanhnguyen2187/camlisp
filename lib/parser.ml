@@ -9,6 +9,7 @@ module Parser =
             | String_ of string
             | Symbol of string
             | Application of node * node Queue.t
+            | Define of string * node
         let rec to_string n =
             match n with
             | None_ -> "<Node None>"
@@ -19,6 +20,9 @@ module Parser =
             | Application (proc, params)
                 -> "<Node Application: " ^ (to_string proc) ^ "; "
                 ^ (to_string_nodes params) ^ ">"
+            | Define (symbol, value)
+                -> "<Node Define: " ^ symbol ^ "; "
+                ^ (to_string value) ^ ">"
         and to_string_nodes nodes =
             Queue.to_seq nodes
             |> (fun iters -> Seq.map to_string iters)
@@ -70,8 +74,16 @@ module Parser =
                 let appl = parse_one (Application (None_, Queue.create ())) tokens in
                 Queue.add appl params;
                 parse_one (Application (proc, params)) tokens
-            | Application(proc, params), Tokenizer.ClosingBracket ->
-                Application(proc, params)
+            | Application(Symbol(expr), params), Tokenizer.ClosingBracket ->
+                if expr = "define"
+                then
+                    let param_1 = Queue.take_opt params in
+                    let param_2 = Queue.take_opt params in
+                    match param_1, param_2 with
+                    | Some(Symbol(name)), Some(node) -> Define (name, node)
+                    | _, _ -> failwith ("parse_one received invalid define " ^ to_string curr)
+                else
+                    curr
             | _, _ -> failwith "parse_one unreachable code"
         let parse tokens =
             let rec f nodes tokens =

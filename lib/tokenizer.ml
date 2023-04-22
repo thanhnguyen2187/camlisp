@@ -34,7 +34,6 @@ module Tokenizer =
                 | ")" ->
                     if expr != ""
                     then Queue.push (Word expr) queue;
-
                     Queue.push ClosingBracket queue;
                     let new_expr = (if expr != "" then "" else expr) in
                     f new_expr rest_text

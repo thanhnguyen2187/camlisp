@@ -2,6 +2,11 @@ open Parser
 
 module Evaluator =
     struct
+        let default_env : (string, Parser.node) Hashtbl.t = Hashtbl.create 10
+        (* let add_binding env expr node = *)
+        (*     Hashtbl.add env expr node *)
+        (* let remove_binding env expr = *)
+        (*     Hashtbl.remove env expr *)
         let rec try_eval_int node =
             match node with
             | Parser.NumberInt(value) -> value
@@ -29,17 +34,20 @@ module Evaluator =
                     (* | "+." -> Parser.NumberFloat(add_floats params) *)
                     | "-" -> Parser.NumberInt(make_operator_handler (-) params) 
                     | "*" -> Parser.NumberInt(make_operator_handler ( * ) params) 
-                    | "/" -> Parser.NumberInt(make_operator_handler (/) params) 
+                    | "/" -> Parser.NumberInt(make_operator_handler (/) params)
                     | _ -> failwith "unimplemented yet"
                 end
             | _ -> failwith "unimplemented yet"
-        and eval node =
+        and eval env node =
             match node with
             | Parser.NumberInt(value) -> Parser.NumberInt(value)
             | Parser.NumberFloat(value) -> Parser.NumberFloat(value)
             | Parser.String_(value) -> Parser.String_(value)
-            (* | Parser.Symbol(expr) -> Hashtbl.find env expr *)
+            | Parser.Symbol(expr) -> Hashtbl.find env expr
             | Parser.Application(proc, params) -> apply proc params
-            | _ -> failwith "eval node not implemented"
+            | Parser.Define(name, node) ->
+                Hashtbl.add env name node;
+                node
+            | _ -> failwith ("eval node not implemented " ^ Parser.to_string node)
     end
 
