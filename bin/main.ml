@@ -17,7 +17,6 @@ while true do
                     |> print_string
                     |> print_newline
             ) nodes)
-        |> print_newline
         ;
 done
 
