@@ -1,5 +1,6 @@
 open Camlisp.Tokenizer;;
 open Camlisp.Parser;;
+open Camlisp.Evaluator;;
 
 while true do
     let line = read_line() in
@@ -9,13 +10,13 @@ while true do
         let tokens = Tokenizer.tokenize line in
         Parser.parse tokens
         |> Queue.to_seq
-        |> (fun nodes ->
-                Seq.iter (
-                    fun node ->
-                        Parser.to_string node
-                        |> print_string
-                        |> print_newline
-                ) nodes)
+        |> (fun nodes -> Seq.iter (
+                fun node ->
+                    (Evaluator.eval node)
+                    |> Parser.to_string
+                    |> print_string
+                    |> print_newline
+            ) nodes)
         |> print_newline
         ;
 done

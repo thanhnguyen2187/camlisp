@@ -1,4 +1,4 @@
 (library
  (name camlisp)
- (modules Tokenizer Parser)
+ (modules Tokenizer Parser Evaluator)
  (libraries str))
