@@ -9,7 +9,6 @@ module Parser =
             | String_ of string
             | Symbol of string
             | Sequence of node Queue.t
-            | Application of node * node Queue.t
             | Define of string * node
             | Func of node Queue.t * node Queue.t
         let rec to_string n =
@@ -19,11 +18,8 @@ module Parser =
             | NumberFloat (value) -> string_of_float value
             | String_ (value) -> "\"" ^ value ^ "\""
             | Symbol (value) -> value
-            | Application (proc, params)
-                -> "(" ^ (to_string proc) ^ " "
-                ^ (to_string_nodes params true) ^ ")"
             | Define (symbol, value)
-                -> "(define " ^ symbol ^ " "
+                -> "(" ^ symbol ^ " "
                 ^ (to_string value) ^ ">"
             | Sequence (params) -> to_string_nodes params true
             | Func (params, body) ->
@@ -68,6 +64,7 @@ module Parser =
                 Symbol(expr)
             | _ -> failwith ("parse_one was unable to match expr with a defined pattern: " ^ expr)
         let parse_define nodes =
+            let _ = Queue.take_opt nodes in
             let param_1 = Queue.take_opt nodes in
             let param_2 = Queue.take_opt nodes in
             begin
@@ -86,14 +83,15 @@ module Parser =
                 true
                 nodes
         let parse_lambda nodes =
+            let _ = Queue.take_opt nodes in
             let params = Queue.take_opt nodes in
             let body = nodes in
             begin
                 match params, body with
-                | Some(Sequence(nodes)), _
-                when (Queue.length body) > 0 && all_symbols nodes ->
-                    Func(nodes, body)
-                | _, _ -> failwith ("parse_lambda received an invalid node " ^ to_string (Sequence(nodes)))
+                | Some (Sequence param_nodes), _ ->
+                (* when (Queue.length body) > 0 && all_symbols param_nodes -> *)
+                    Func (param_nodes, body)
+                | _, _ -> failwith ("parse_lambda received an invalid node " ^ to_string (Sequence nodes))
             end
         let rec parse_one curr tokens =
             let token = Queue.take tokens in
@@ -111,14 +109,14 @@ module Parser =
                 Queue.add appl nodes;
                 parse_one curr tokens
             | Sequence (nodes), Tokenizer.ClosingBracket ->
-                let first_node = Queue.take nodes in
+                let first_node = Queue.peek nodes in
                 begin
                     match first_node with
                     (* TODO: using Queue means there is implicit mutation;
                              find a way to do it efficiently without mutation *)
                     | Symbol("define") -> parse_define nodes
                     | Symbol("lambda") -> parse_lambda nodes
-                    | _ -> Application(first_node, nodes)
+                    | _ -> curr
                 end
             | _, _ -> failwith "parse_one unreachable code"
         let parse tokens =
