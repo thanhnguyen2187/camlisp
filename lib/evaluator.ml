@@ -48,6 +48,7 @@ module Evaluator =
             | Parser.Define(name, node) ->
                 Hashtbl.add env name node;
                 node
+            | Parser.Func(_, _) -> node
             | _ -> failwith ("eval node not implemented " ^ Parser.to_string node)
     end
 

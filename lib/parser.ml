@@ -26,7 +26,8 @@ module Parser =
                 -> "<Node Define: " ^ symbol ^ "; "
                 ^ (to_string value) ^ ">"
             | Sequence (params) -> "<Node Sequence: " ^ to_string_nodes params ^ ">"
-            | _ -> "<Node undefined>"
+            | Func (params, body) -> "<Node Func: " ^ to_string_nodes params ^ "; " ^ (to_string_nodes body) ^ ">"
+            (* | _ -> "<Node undefined>" *)
         and to_string_nodes nodes =
             Queue.to_seq nodes
             |> (fun iters -> Seq.map to_string iters)
@@ -60,6 +61,34 @@ module Parser =
             | expr when Str.string_match symbol_regex expr 0 ->
                 Symbol(expr)
             | _ -> failwith ("parse_one was unable to match expr with a defined pattern: " ^ expr)
+        let parse_define nodes =
+            let param_1 = Queue.take_opt nodes in
+            let param_2 = Queue.take_opt nodes in
+            begin
+                match param_1, param_2 with
+                | Some (Symbol name), Some node -> Define (name, node)
+                | _, _ -> failwith ("parse_define received invalid node " ^ to_string (Sequence(nodes)))
+                (* | _ -> None_ *)
+            end
+        let all_symbols nodes =
+            Queue.fold
+                (fun curr node ->
+                    match curr, node with
+                    | false, _ -> false
+                    | true, Symbol _ -> true
+                    | _, _ -> failwith "all_symbols unreachable code")
+                true
+                nodes
+        let parse_lambda nodes =
+            let params = Queue.take_opt nodes in
+            let body = nodes in
+            begin
+                match params, body with
+                | Some(Sequence(nodes)), _
+                when (Queue.length body) > 0 && all_symbols nodes ->
+                    Func(nodes, body)
+                | _, _ -> failwith ("parse_lambda received an invalid node " ^ to_string (Sequence(nodes)))
+            end
         let rec parse_one curr tokens =
             let token = Queue.take tokens in
             match curr, token with
@@ -79,14 +108,10 @@ module Parser =
                 let first_node = Queue.take nodes in
                 begin
                     match first_node with
-                    | Symbol("define") ->
-                        let param_1 = Queue.take_opt nodes in
-                        let param_2 = Queue.take_opt nodes in
-                        begin
-                            match param_1, param_2 with
-                            | Some(Symbol(name)), Some(node) -> Define (name, node)
-                            | _, _ -> failwith ("parse_one received invalid define " ^ to_string curr)
-                        end
+                    (* TODO: using Queue means there is implicit mutation;
+                             find a way to do it efficiently without mutation *)
+                    | Symbol("define") -> parse_define nodes
+                    | Symbol("lambda") -> parse_lambda nodes
                     | _ -> Application(first_node, nodes)
                 end
             | _, _ -> failwith "parse_one unreachable code"
