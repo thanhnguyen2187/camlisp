@@ -14,24 +14,30 @@ module Parser =
             | Func of node Queue.t * node Queue.t
         let rec to_string n =
             match n with
-            | None_ -> "<Node None>"
-            | NumberInt (value) -> "<Node Int: " ^ string_of_int value ^ ">"
-            | NumberFloat (value) -> "<Node Float: " ^ string_of_float value ^ ">"
-            | String_ (value) -> "<Node String: \"" ^ value ^ "\">"
-            | Symbol (value) -> "<Node Symbol: " ^ value ^ ">"
+            | None_ -> "null"
+            | NumberInt (value) -> string_of_int value
+            | NumberFloat (value) -> string_of_float value
+            | String_ (value) -> "\"" ^ value ^ "\""
+            | Symbol (value) -> value
             | Application (proc, params)
-                -> "<Node Application: " ^ (to_string proc) ^ "; "
-                ^ (to_string_nodes params) ^ ">"
+                -> "(" ^ (to_string proc) ^ " "
+                ^ (to_string_nodes params true) ^ ")"
             | Define (symbol, value)
-                -> "<Node Define: " ^ symbol ^ "; "
+                -> "(define " ^ symbol ^ " "
                 ^ (to_string value) ^ ">"
-            | Sequence (params) -> "<Node Sequence: " ^ to_string_nodes params ^ ">"
-            | Func (params, body) -> "<Node Func: " ^ to_string_nodes params ^ "; " ^ (to_string_nodes body) ^ ">"
+            | Sequence (params) -> to_string_nodes params true
+            | Func (params, body) ->
+                "(lambda " ^ to_string_nodes params true ^ " "
+                ^ to_string_nodes body false ^ ")"
             (* | _ -> "<Node undefined>" *)
-        and to_string_nodes nodes =
+        and to_string_nodes nodes wrapped =
             Queue.to_seq nodes
             |> (fun iters -> Seq.map to_string iters)
             |> (fun strings -> String.concat ", " (List.of_seq strings))
+            |> (fun result ->
+                    if wrapped
+                    then "(" ^ result ^ ")"
+                    else result)
 
         let number_int_regex = Str.regexp {|^[-+]?[0-9]+$|}
         let number_float_regex = Str.regexp {|^[-+]?[0-9]+\.[0-9]+$|}
