@@ -37,10 +37,6 @@ module Evaluator =
                     | _ -> apply
                             env
                             (eval env proc)
-                            (* (Seq.map *)
-                            (*     (fun node -> (eval env node)) *)
-                            (*     (Queue.to_seq params) *)
-                            (*  |> Queue.of_seq) *)
                             params
                 end
             | Parser.Func(fn_params, body) ->

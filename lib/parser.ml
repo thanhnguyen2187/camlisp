@@ -49,6 +49,8 @@ module Parser =
         let number_float_regex = Str.regexp {|^[-+]?[0-9]+\.[0-9]+$|}
         let string_regex = Str.regexp {|^".*"$|}
         let symbol_regex = Str.regexp {|^[a-zA-Z+-/*][a-zA-Z0-9\.]*$|}
+        (* bool_regex needs extra slash (\), since OCaml syntax for raw string
+           does not get the pipe (|) without the slash *)
         let bool_regex = Str.regexp {|^true\|false\|#t\|#f$|}
         let pop_until_match stack =
             (* let stack = Stack.copy stack in *)
@@ -85,8 +87,7 @@ module Parser =
             begin
                 match param_1, param_2 with
                 | Some (Symbol name), Some node -> Define (name, node)
-                | _, _ -> failwith ("parse_define received invalid node " ^ to_string (Sequence(nodes)))
-                (* | _ -> None_ *)
+                | _ -> failwith ("parse_define received invalid node " ^ to_string (Sequence(nodes)))
             end
         let all_symbols nodes =
             Queue.fold
@@ -94,7 +95,7 @@ module Parser =
                     match curr, node with
                     | false, _ -> false
                     | true, Symbol _ -> true
-                    | _, _ -> failwith "all_symbols unreachable code")
+                    | _ -> failwith "all_symbols unreachable code")
                 true
                 nodes
         let parse_lambda nodes =
@@ -155,4 +156,3 @@ module Parser =
     end
 ;;
 
-Str.string_match (Str.regexp {|^true\|false\|#t\|#f$|}) "false" 0;;
