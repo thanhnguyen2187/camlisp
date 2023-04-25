@@ -16,6 +16,7 @@ while true do
                 (fun node ->
                     (Evaluator.eval env node)
                     |> Parser.to_string
+                    (* Parser.to_string node *)
                     |> print_string
                     |> print_newline)
                 nodes)

@@ -3,10 +3,6 @@ open Parser
 module Evaluator =
     struct
         let default_env : (string, Parser.node) Hashtbl.t = Hashtbl.create 10
-        (* let add_binding env expr node = *)
-        (*     Hashtbl.add env expr node *)
-        (* let remove_binding env expr = *)
-        (*     Hashtbl.remove env expr *)
         let rec try_eval_int env node =
             let result = eval env node in
             match result with
@@ -20,6 +16,10 @@ module Evaluator =
                 (try_eval_int env (Queue.peek params))
                 (Queue.to_seq params |> Seq.drop 1)
         and apply env proc params =
+            (* let () = print_string ( *)
+            (*     "apply proc " ^ Parser.to_string proc ^ *)
+            (*     " to params " ^ Parser.to_string_nodes params true *)
+            (* ); print_newline () in *)
             match proc with
             | Parser.Symbol(expr) ->
                 begin
@@ -29,9 +29,17 @@ module Evaluator =
                     | "-" -> Parser.NumberInt(make_operator_handler env (-) params) 
                     | "*" -> Parser.NumberInt(make_operator_handler env ( * ) params) 
                     | "/" -> Parser.NumberInt(make_operator_handler env (/) params)
-                    | _ -> failwith "unimplemented yet"
+                    | _ -> apply
+                            env
+                            (eval env proc)
+                            (* (Seq.map *)
+                            (*     (fun node -> (eval env node)) *)
+                            (*     (Queue.to_seq params) *)
+                            (*  |> Queue.of_seq) *)
+                            params
                 end
             | Parser.Func(fn_params, body) ->
+                (* TODO: optimize by looking at the way `Hashtbl.add` works *)
                 let new_env = Hashtbl.copy env in
                 Seq.iter2
                     (fun fn_param param ->
@@ -48,17 +56,29 @@ module Evaluator =
                     then result
                     else f body
                 in f (Queue.copy body)
-            | _ -> failwith "unimplemented yet"
+            | _ -> failwith (
+                "apply is not implemented for proc " ^ Parser.to_string proc ^
+                ", params " ^ Parser.to_string_nodes params true
+            )
         and eval env node =
             match node with
             | Parser.NumberInt(_) -> node
             | Parser.NumberFloat(_) -> node
             | Parser.String_(_) -> node
-            | Parser.Symbol(expr) -> Hashtbl.find env expr
+            | Parser.Symbol(name) -> Hashtbl.find env name
             | Parser.Sequence(nodes) ->
+                (* A hairy bug was found here: `Queue.take` mutates nodes and
+                   make the first node/the operator "disappear". As a result,
+                   later application is not applicable anymore. `Queue.copy` is
+                   used as a counter-measure.
+
+                   TODO: change every underlying types to using `List`, as it is
+                   immutable and easier for pattern-maching comparing to `Queue`
+                   *)
+                let nodes = Queue.copy nodes in
                 let proc = Queue.take nodes in
                 let params = nodes in
-                apply env (eval env proc) params
+                apply env proc params
             | Parser.Define(name, node) ->
                 let node_result = eval env node in
                 Hashtbl.add env name node_result;
