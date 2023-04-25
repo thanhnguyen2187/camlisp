@@ -4,6 +4,7 @@ module Parser =
     struct
         type node =
             | None_
+            | Bool of bool
             | NumberInt of int
             | NumberFloat of float
             | String_ of string
@@ -11,6 +12,7 @@ module Parser =
             | Sequence of node Queue.t
             | Define of string * node
             | Func of node Queue.t * node Queue.t
+            | If of node * node * node
         let rec to_string n =
             match n with
             | None_ -> "null"
@@ -25,11 +27,19 @@ module Parser =
             | Func (params, body) ->
                 "(lambda " ^ to_string_nodes params true ^ " "
                 ^ to_string_nodes body false ^ ")"
-            (* | _ -> "<Node undefined>" *)
+            | If (pred, conseq, alt) ->
+                    "(if " ^ to_string pred ^ " "
+                    ^ to_string conseq ^" "
+                    ^ to_string alt ^ ")"
+            | Bool (value) ->
+                if value
+                then "#t"
+                else "#f"
+            (* | _ -> "*undefined*" *)
         and to_string_nodes nodes wrapped =
             Queue.to_seq nodes
             |> (fun iters -> Seq.map to_string iters)
-            |> (fun strings -> String.concat ", " (List.of_seq strings))
+            |> (fun strings -> String.concat " " (List.of_seq strings))
             |> (fun result ->
                     if wrapped
                     then "(" ^ result ^ ")"
@@ -39,6 +49,7 @@ module Parser =
         let number_float_regex = Str.regexp {|^[-+]?[0-9]+\.[0-9]+$|}
         let string_regex = Str.regexp {|^".*"$|}
         let symbol_regex = Str.regexp {|^[a-zA-Z+-/*][a-zA-Z0-9\.]*$|}
+        let bool_regex = Str.regexp {|^true\|false\|#t\|#f$|}
         let pop_until_match stack =
             (* let stack = Stack.copy stack in *)
             let queue = Queue.create () in
@@ -53,15 +64,19 @@ module Parser =
         let parse_expr expr =
             match expr with
             | expr when Str.string_match number_int_regex expr 0 ->
-                NumberInt(int_of_string expr)
+                NumberInt (int_of_string expr)
             | expr when Str.string_match number_float_regex expr 0 ->
-                NumberFloat(float_of_string expr)
+                NumberFloat (float_of_string expr)
             | expr when Str.string_match string_regex expr 0 ->
                 (* skipping the first and last character of expr, for
-                   example, `"something"` gets turned into `something` *)
-                String_(String.sub expr 1 ((String.length expr) - 2))
+                   example, `"something"` gets turned into `something`;
+                   `((String.length expr) - 2)` is passed since `.sub` expect
+                   the cut's length instead of the end index *)
+                String_ (String.sub expr 1 ((String.length expr) - 2))
+            | expr when Str.string_match bool_regex expr 0 ->
+                Bool (String.contains expr 't')
             | expr when Str.string_match symbol_regex expr 0 ->
-                Symbol(expr)
+                Symbol (expr)
             | _ -> failwith ("parse_one was unable to match expr with a defined pattern: " ^ expr)
         let parse_define nodes =
             let _ = Queue.take_opt nodes in
@@ -93,6 +108,14 @@ module Parser =
                     Func (param_nodes, body)
                 | _, _ -> failwith ("parse_lambda received an invalid node " ^ to_string (Sequence nodes))
             end
+        let parse_if nodes =
+            let _ = Queue.take_opt nodes in
+            let pred = Queue.take_opt nodes in
+            let conseq = Queue.take_opt nodes in
+            let alt = Queue.take_opt nodes in
+            match pred, conseq, alt with
+            | Some(pred), Some(conseq), Some(alt) -> If(pred, conseq, alt)
+            | _ -> failwith ("parse_lambda received an invalid node " ^ to_string (Sequence nodes))
         let rec parse_one curr tokens =
             let token = Queue.take tokens in
             match curr, token with
@@ -116,6 +139,7 @@ module Parser =
                              find a way to do it efficiently without mutation *)
                     | Symbol("define") -> parse_define nodes
                     | Symbol("lambda") -> parse_lambda nodes
+                    | Symbol("if") -> parse_if nodes
                     | _ -> curr
                 end
             | _, _ -> failwith "parse_one unreachable code"
@@ -130,3 +154,5 @@ module Parser =
             in f (Queue.create ()) (Queue.copy tokens)
     end
 ;;
+
+Str.string_match (Str.regexp {|^true\|false\|#t\|#f$|}) "false" 0;;
