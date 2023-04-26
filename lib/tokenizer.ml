@@ -12,6 +12,16 @@ module Tokenizer =
                 print_string "<Closing Bracket: )>"
             | Word(expr) ->
                 print_string ("<Word: " ^ expr ^ ">")
+        let is_balanced text =
+            let stack = Stack.create () in
+            let () = String.iter
+                (fun char ->
+                    match char with
+                    | '(' -> Stack.push char stack
+                    | ')' -> let _ = Stack.pop stack in ()
+                    | _ -> ())
+                text
+            in (Stack.length stack) = 0
         let strip_input text =
             Str.replace_first (Str.regexp "[ \t\r\n]*$") "" text
         let tokenize text =

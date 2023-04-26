@@ -109,5 +109,9 @@ module Evaluator =
                 Hashtbl.add env name node_result;
                 node_result
             | _ -> failwith ("eval node not implemented " ^ Parser.to_string node)
+        and eval_nodes env nodes =
+            Seq.map
+                (fun node -> eval env node)
+                (Queue.to_seq nodes)
     end
 

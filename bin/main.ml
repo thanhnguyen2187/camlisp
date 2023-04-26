@@ -2,24 +2,34 @@ open Camlisp.Tokenizer
 open Camlisp.Parser
 open Camlisp.Evaluator
 
+type input_state =
+    | Prompting of string
+    | Done
+
+let rec read_eval_print env state curr =
+    match state with
+    | Prompting (characters) ->
+        print_string (characters ^ " ");
+        let line = read_line () in
+        let expr = curr ^ " " ^ line in
+        if Tokenizer.is_balanced expr
+        then read_eval_print env Done expr
+        else read_eval_print env (Prompting "..") expr
+    | Done ->
+        Tokenizer.tokenize curr
+        (* |> Queue.iter Tokenizer.print_token *)
+        (* |> print_newline *)
+        |> Parser.parse
+        |> Evaluator.eval_nodes env
+        |> Seq.map Parser.to_string
+        |> Seq.iter
+            (fun node_string ->
+                print_string node_string;
+                print_newline ())
+        (* () *)
+
 let () =
 let env = Evaluator.default_env in
 while true do
-    let line = read_line() in
-    let line = Tokenizer.strip_input line in
-    if line != "" then
-        let tokens = Tokenizer.tokenize line in
-        Parser.parse tokens
-        |> Queue.to_seq
-        |> (fun nodes ->
-                Seq.iter
-                (fun node ->
-                    (Evaluator.eval env node)
-                    |> Parser.to_string
-                    (* Parser.to_string node *)
-                    |> print_string
-                    |> print_newline)
-                nodes)
-        ;
+    read_eval_print env (Prompting "=>") ""
 done
-
