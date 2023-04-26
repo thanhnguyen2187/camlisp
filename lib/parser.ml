@@ -89,41 +89,18 @@ module Parser =
                     | _ -> failwith "all_symbols unreachable code")
                 true
                 nodes
-        (* let parse_lambda nodes = *)
-        (*     (1* let () = print_string ("parse_lambda received " ^ to_string_nodes nodes true) in *1) *)
-        (*     let _ = Queue.take_opt nodes in *)
-        (*     let params = Queue.take_opt nodes in *)
-        (*     let body = nodes in *)
-        (*     begin *)
-        (*         match params, body with *)
-        (*         | Some (Sequence param_nodes), _ *)
-        (*         when (Queue.length body) > 0 && all_symbols param_nodes -> *)
-        (*             Func (param_nodes, body) *)
-        (*         | _, _ -> failwith ("parse_lambda received an invalid node " ^ to_string (Sequence nodes)) *)
-        (*     end *)
+        let parse_lambda nodes =
+            match nodes with
+            | Symbol "lambda" :: Sequence params :: body -> Func (params, body)
+            | _ -> failwith ("parse_lambda received an invalid node " ^ to_string_nodes nodes true)
         let parse_define nodes =
             match nodes with
-            | Symbol("define") :: Symbol name :: node :: [] -> Define (name, node)
+            | Symbol "define" :: Symbol name :: node :: [] -> Define (name, node)
             | _ -> failwith ("parse_define received an invalid node " ^ to_string_nodes nodes true)
-            (* let _ = Queue.take_opt nodes in *)
-            (* let param_1 = Queue.take_opt nodes in *)
-            (* let param_2 = Queue.take_opt nodes in *)
-            (* begin *)
-            (*     match param_1, param_2 with *)
-            (*     | Some (Symbol name), Some node -> Define (name, node) *)
-            (*     (1* | Some (Sequence params), Some body -> *1) *)
-            (*     (1*     let first_node = Queue.take_opt params in *1) *)
-            (*     (1*     begin *1) *)
-            (*     (1*         match first_node with *1) *)
-            (*     (1*         | Some (Symbol name) -> Define (name, Func (params, body)) *1) *)
-            (*     (1*         | _ -> failwith ("parse_define received an invalid node " ^ to_string (Sequence nodes)) *1) *)
-            (*     (1*     end *1) *)
-            (*     | _ -> failwith ("parse_define received an invalid node " ^ to_string (Sequence nodes)) *)
-            (* end *)
         let parse_if nodes =
             match nodes with
-            | pred :: conseq :: alt :: [] -> If(pred, conseq, alt)
-            | _ -> failwith ("parse_lambda received an invalid node " ^ to_string (Sequence nodes))
+            | Symbol "if" :: pred :: conseq :: alt :: [] -> If(pred, conseq, alt)
+            | _ -> failwith ("parse_if received an invalid node " ^ to_string (Sequence nodes))
         let rec parse_one curr tokens =
             match curr, tokens with
             | None_, Tokenizer.Word(expr) :: rest_tokens ->
@@ -140,16 +117,10 @@ module Parser =
                 begin
                     match nodes with
                     | Symbol("define") :: _ -> (parse_define nodes), rest_tokens
+                    | Symbol("if") :: _ -> (parse_if nodes), rest_tokens
+                    | Symbol("lambda") :: _ -> (parse_lambda nodes), rest_tokens
                     | _ -> curr, rest_tokens
                 end
-                (* let first_node = Queue.peek nodes in *)
-                (* begin *)
-                (*     match first_node with *)
-                (*     | Symbol("define") -> parse_define nodes *)
-                (*     | Symbol("lambda") -> parse_lambda nodes *)
-                (*     | Symbol("if") -> parse_if nodes *)
-                (*     | _ -> curr *)
-                (* end *)
             | _, _ -> failwith "parse_one unreachable code"
         let rec parse tokens =
             match tokens with
