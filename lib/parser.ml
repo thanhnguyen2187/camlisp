@@ -121,9 +121,9 @@ module Parser =
             | Sequence (nodes), Tokenizer.ClosingBracket :: rest_tokens ->
                 begin
                     match nodes with
-                    | Symbol("define") :: _ -> (parse_define nodes), rest_tokens
-                    | Symbol("if") :: _ -> (parse_if nodes), rest_tokens
-                    | Symbol("lambda") :: _ -> (parse_lambda nodes), rest_tokens
+                    | Symbol "define" :: _ -> (parse_define nodes), rest_tokens
+                    | Symbol "if" :: _ -> (parse_if nodes), rest_tokens
+                    | Symbol "lambda" :: _ -> (parse_lambda nodes), rest_tokens
                     | _ -> curr, rest_tokens
                 end
             | _, _ -> failwith "parse_one unreachable code"
