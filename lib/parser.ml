@@ -91,12 +91,17 @@ module Parser =
                 nodes
         let parse_lambda nodes =
             match nodes with
-            | Symbol "lambda" :: Sequence params :: body -> Func (params, body)
+            | Symbol "lambda" :: Sequence params :: body ->
+                Func (params, body)
             | _ -> failwith ("parse_lambda received an invalid node " ^ to_string_nodes nodes true)
         let parse_define nodes =
             match nodes with
-            | Symbol "define" :: Symbol name :: node :: [] -> Define (name, node)
-            | _ -> failwith ("parse_define received an invalid node " ^ to_string_nodes nodes true)
+            | Symbol "define" :: Symbol name :: node :: [] ->
+                Define (name, node)
+            | Symbol "define" :: Sequence ((Symbol name) :: params) :: body ->
+                Define (name, Func (params, body))
+            | _ ->
+                failwith ("parse_define received an invalid node " ^ to_string_nodes nodes true)
         let parse_if nodes =
             match nodes with
             | Symbol "if" :: pred :: conseq :: alt :: [] -> If(pred, conseq, alt)
