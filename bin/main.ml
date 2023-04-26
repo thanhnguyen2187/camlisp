@@ -17,7 +17,7 @@ let rec read_eval_print env state curr =
         else read_eval_print env (Prompting "..") expr
     | Done ->
         Tokenizer.tokenize curr
-        (* |> Queue.iter Tokenizer.print_token *)
+        (* |> List.iter Tokenizer.print_token *)
         (* |> print_newline *)
         |> Parser.parse
         |> Evaluator.eval_nodes env
@@ -26,7 +26,6 @@ let rec read_eval_print env state curr =
             (fun node_string ->
                 print_string node_string;
                 print_newline ())
-        (* () *)
 
 let () =
 let env = Evaluator.default_env in

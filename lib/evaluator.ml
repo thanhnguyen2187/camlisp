@@ -18,8 +18,8 @@ module Evaluator =
                 (fun curr node ->
                     let value = try_eval_int env node in
                     (op curr value))
-                (try_eval_int env (Queue.peek params))
-                (Queue.to_seq params |> Seq.drop 1)
+                (try_eval_int env (List.hd params))
+                (List.to_seq params |> Seq.drop 1)
         and apply env proc params =
             (* let () = print_string ( *)
             (*     "apply proc " ^ Parser.to_string proc ^ *)
@@ -34,12 +34,12 @@ module Evaluator =
                     | "*" -> Parser.NumberInt(make_operator_handler env ( * ) params) 
                     | "/" -> Parser.NumberInt(make_operator_handler env (/) params)
                     | "=" ->
-                        let first_param = eval env (Queue.top params) in
+                        let first_param = eval env (List.hd params) in
                         begin match Seq.find
                             (fun param -> not (compare_nodes (eval env param) first_param))
                             (* skip the first parameter to avoid redundant
                                `eval` *)
-                            (Queue.to_seq params |> Seq.drop 1)
+                            (List.to_seq params |> Seq.drop 1)
                             with
                                 | Some(_) -> Parser.Bool(false)
                                 | None -> Parser.Bool(true)
@@ -55,15 +55,23 @@ module Evaluator =
                         | Parser.Symbol(fn_param_sym) ->
                             Hashtbl.add new_env fn_param_sym (eval env param)
                         | _ -> failwith "apply error")
-                    (Queue.to_seq fn_params)
-                    (Queue.to_seq params);
+                    (List.to_seq fn_params)
+                    (List.to_seq params);
                 let rec f body =
-                    let node = Queue.take body in
-                    let result = eval new_env node in
-                    if Queue.length body = 0
-                    then result
-                    else f body
-                in f (Queue.copy body)
+                    begin
+                        match body with
+                        | node :: [] -> eval new_env node
+                        | node :: rest_body ->
+                            let _ = eval new_env node in
+                            f rest_body
+                        | _ -> failwith "apply cannot work with empty body"
+                    end
+                    (* let node = Queue.take body in *)
+                    (* let result = eval new_env node in *)
+                    (* if List.length body = 0 *)
+                    (* then result *)
+                    (* else f body *)
+                in f body
             | _ -> failwith (
                 "apply is not implemented for proc " ^ Parser.to_string proc ^
                 ", params " ^ Parser.to_string_nodes params true
@@ -100,10 +108,15 @@ module Evaluator =
                    TODO: change every underlying types to using `List`, as it is
                    immutable and easier for pattern-maching comparing to `Queue`
                    *)
-                let nodes = Queue.copy nodes in
-                let proc = Queue.take nodes in
-                let params = nodes in
-                apply env proc params
+                begin
+                    match nodes with
+                    | proc :: params -> apply env proc params
+                    | _ -> failwith ""
+                end
+                (* let nodes = Queue.copy nodes in *)
+                (* let proc = Queue.take nodes in *)
+                (* let params = nodes in *)
+                (* apply env proc params *)
             | Parser.Define(name, node) ->
                 let node_result = eval env node in
                 Hashtbl.add env name node_result;
@@ -112,6 +125,6 @@ module Evaluator =
         and eval_nodes env nodes =
             Seq.map
                 (fun node -> eval env node)
-                (Queue.to_seq nodes)
+                (List.to_seq nodes)
     end
 
