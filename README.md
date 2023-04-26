@@ -1,4 +1,4 @@
-# CaMLisp (WIP)
+# CamLisp (WIP)
 
 A toy Lisp/Scheme interpreter in OCaml.
 
@@ -34,5 +34,27 @@ Test the REPL:
 1
 => (+ x 1)
 2
+```
+
+```lisp
+=> (define (fact n)
+..   (if (= n 1)
+..     1
+..     (* n (fact (- n 1)))))
+(lambda (n) (if (= n 1) 1 (* n (fact (- n 1)))))
+=> (fact 5)
+120
+```
+
+```lisp
+=> (define (fact-iter n)
+..   (define (iter result n)
+..     (if (= n 1)
+..       result
+..       (iter (* result n) (- n 1))))
+..   (iter 1 n))
+(lambda ...)
+=> (fact-iter 5)
+120
 ```
 
