@@ -25,3 +25,14 @@ Run the binary:
 dune exec camlisp
 ```
 
+Test the REPL:
+
+```lisp
+=> 1
+1
+=> (define x 1)
+1
+=> (+ x 1)
+2
+```
+
