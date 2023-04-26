@@ -33,11 +33,18 @@ module Evaluator =
                     | "-" -> Parser.NumberInt(make_operator_handler env (-) params) 
                     | "*" -> Parser.NumberInt(make_operator_handler env ( * ) params) 
                     | "/" -> Parser.NumberInt(make_operator_handler env (/) params)
-                    | "=" -> Parser.Bool(true)
-                    | _ -> apply
-                            env
-                            (eval env proc)
-                            params
+                    | "=" ->
+                        let first_param = eval env (Queue.top params) in
+                        begin match Seq.find
+                            (fun param -> not (compare_nodes (eval env param) first_param))
+                            (* skip the first parameter to avoid redundant
+                               `eval` *)
+                            (Queue.to_seq params |> Seq.drop 1)
+                            with
+                                | Some(_) -> Parser.Bool(false)
+                                | None -> Parser.Bool(true)
+                        end
+                    | _ -> apply env (eval env proc) params
                 end
             | Parser.Func(fn_params, body) ->
                 (* TODO: optimize by looking at the way `Hashtbl.add` works *)
