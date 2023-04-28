@@ -58,3 +58,18 @@ Test the REPL:
 120
 ```
 
+## TODO
+
+- [x] Implement `+`, `-`, `*`, and `/`
+  - [ ] Redefine the underlying type to make the operators work for both `int`
+    and `float`
+  - [ ] Find a strategy to turn the operators into a "normal" `Func`?
+- [x] Implement `lambda`
+- [x] Implement `define`
+- [ ] Implement `cons`, `car` and `cdr`
+- [ ] Implement `quote`
+- [ ] Implement `let` and `let*`
+- [ ] Implement `set!`
+- [ ] Implement `eval` and `apply`
+- [ ] Research how to release/distribute the built binary
+
