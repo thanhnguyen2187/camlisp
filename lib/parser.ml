@@ -22,7 +22,7 @@ module Parser =
             | Symbol (value) -> value
             | Define (symbol, value)
                 -> "(" ^ symbol ^ " "
-                ^ (to_string value) ^ ">"
+                ^ (to_string value) ^ ")"
             | Sequence (params) -> to_string_nodes params true
             | Func (params, body) ->
                 "(lambda " ^ to_string_nodes params true ^ " "
