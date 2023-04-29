@@ -2,16 +2,15 @@ module Tokenizer =
     struct
         type token =
             | OpeningBracket
+            | QuotedOpeningBracket
             | ClosingBracket
             | Word of string
-        let print_token token =
+        let to_string token =
             match token with
-            | OpeningBracket ->
-                print_string "<Opening Bracket: (>"
-            | ClosingBracket ->
-                print_string "<Closing Bracket: )>"
-            | Word(expr) ->
-                print_string ("<Word: " ^ expr ^ ">")
+            | OpeningBracket -> "(token opening-bracket)"
+            | QuotedOpeningBracket -> "(token quoted-opening-bracket)"
+            | ClosingBracket -> "(token closing-bracket)"
+            | Word(expr) -> Format.sprintf "(token \"%s\")" expr
         let is_balanced text =
             let stack = Stack.create () in
             let () = String.iter
@@ -28,23 +27,24 @@ module Tokenizer =
             let rec f tokens expr text =
             let n = String.length text in
             if n = 0 then
-                begin
-                    if expr != ""
-                    then (Word expr) :: tokens
-                    else tokens
-                end
+                if expr != ""
+                then (Word expr) :: tokens
+                else tokens
             else
                 let ch = String.sub text 0 1 in
                 let rest_text = String.sub text 1 (if n = 1 then 0 else n - 1) in
                 match ch with
-                | "(" -> f (OpeningBracket :: tokens) expr rest_text
+                | "(" ->
+                    if expr = "'"
+                    then f (QuotedOpeningBracket :: tokens) "" rest_text
+                    else f (OpeningBracket :: tokens) expr rest_text
                 | ")" ->
                     if expr != ""
-                    then f (ClosingBracket :: (Word expr) :: tokens) "" rest_text
+                    then f (ClosingBracket :: Word expr :: tokens) "" rest_text
                     else f (ClosingBracket :: tokens) "" rest_text
                 | " " | "\n" | "\t" ->
                     if expr != ""
-                    then f ((Word expr) :: tokens) "" rest_text
+                    then f (Word expr :: tokens) "" rest_text
                     else f tokens "" rest_text
                 | c ->
                     f tokens (expr ^ c) rest_text

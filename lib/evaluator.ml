@@ -66,11 +66,6 @@ module Evaluator =
                             f rest_body
                         | _ -> failwith "apply cannot work with empty body"
                     end
-                    (* let node = Queue.take body in *)
-                    (* let result = eval new_env node in *)
-                    (* if List.length body = 0 *)
-                    (* then result *)
-                    (* else f body *)
                 in f body
             | _ -> failwith (
                 "apply is not implemented for proc " ^ Parser.to_string proc ^
@@ -79,27 +74,28 @@ module Evaluator =
         and eval env node =
             match node with
             (* self evaluating *)
-            | Parser.Bool(_)
-            | Parser.Func(_, _)
-            | Parser.NumberInt(_)
-            | Parser.NumberFloat(_)
-            | Parser.String_(_) -> node
+            | Parser.Bool (_)
+            | Parser.Func (_, _)
+            | Parser.NumberInt (_)
+            | Parser.NumberFloat (_)
+            | Parser.String_ (_) -> node
 
             (* other node types *)
-            | Parser.If(pred, conseq, alt) ->
+            | Parser.If (pred, conseq, alt) ->
                 begin
                     match (eval env pred) with
-                        | Parser.Bool(false) -> eval env alt
+                        | Parser.Bool (false) -> eval env alt
                         | _ -> eval env conseq
                 end
-            | Parser.Symbol(name) ->
+            | Parser.Symbol name ->
                 let node = Hashtbl.find_opt env name in
                 begin
                     match node with
-                    | Some(node) -> node
+                    | Some (node) -> node
                     | None -> failwith ("eval unable to find symbol " ^ name)
                 end
-            | Parser.Sequence(nodes) ->
+            | Parser.Quote node -> node
+            | Parser.Sequence nodes ->
                 (* A hairy bug was found here: `Queue.take` mutates nodes and
                    make the first node/the operator "disappear". As a result,
                    later application is not applicable anymore. `Queue.copy` is
@@ -117,7 +113,7 @@ module Evaluator =
                 (* let proc = Queue.take nodes in *)
                 (* let params = nodes in *)
                 (* apply env proc params *)
-            | Parser.Define(name, node) ->
+            | Parser.Define (name, node) ->
                 let node_result = eval env node in
                 Hashtbl.add env name node_result;
                 node_result

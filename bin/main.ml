@@ -17,7 +17,8 @@ let rec read_eval_print env state curr =
         else read_eval_print env (Prompting "..") expr
     | Done ->
         Tokenizer.tokenize curr
-        (* |> List.iter Tokenizer.print_token *)
+        (* |> List.map Tokenizer.to_string *)
+        (* |> List.iter print_string *)
         (* |> print_newline *)
         |> Parser.parse
         |> Evaluator.eval_nodes env

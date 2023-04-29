@@ -9,6 +9,7 @@ module Parser =
             | NumberFloat of float
             | String_ of string
             | Symbol of string
+            | Quote of node
             | Sequence of node list
             | Define of string * node
             | Func of node list * node list
@@ -20,6 +21,7 @@ module Parser =
             | NumberFloat (value) -> string_of_float value
             | String_ (value) -> "\"" ^ value ^ "\""
             | Symbol (value) -> value
+            | Quote (node) -> Format.sprintf "(quote %s)" (to_string node)
             | Define (symbol, value)
                 -> "(" ^ symbol ^ " "
                 ^ (to_string value) ^ ")"
@@ -48,21 +50,10 @@ module Parser =
         let number_int_regex = Str.regexp {|^[-+]?[0-9]+$|}
         let number_float_regex = Str.regexp {|^[-+]?[0-9]+\.[0-9]+$|}
         let string_regex = Str.regexp {|^".*"$|}
-        let symbol_regex = Str.regexp {|^[a-zA-Z+-/*=][a-zA-Z0-9\.-]*$|}
+        let symbol_regex = Str.regexp {|^[a-zA-Z+-/*='][a-zA-Z0-9\.-]*$|}
         (* bool_regex needs extra slash (\), since OCaml syntax for raw string
            does not get the pipe (|) without the slash *)
         let bool_regex = Str.regexp {|^true\|false\|#t\|#f$|}
-        let pop_until_match stack =
-            (* let stack = Stack.copy stack in *)
-            let queue = Queue.create () in
-            let rec f () =
-                let top = Stack.pop stack in
-                match top with
-                | Tokenizer.ClosingBracket -> queue
-                | _ ->
-                    Queue.add top queue;
-                    f ()
-            in f ()
         let parse_expr expr =
             match expr with
             | expr when Str.string_match number_int_regex expr 0 ->
@@ -78,7 +69,9 @@ module Parser =
             | expr when Str.string_match bool_regex expr 0 ->
                 Bool (String.contains expr 't')
             | expr when Str.string_match symbol_regex expr 0 ->
-                Symbol (expr)
+                if String.starts_with ~prefix:"'" expr
+                then Quote (Symbol (String.sub expr 0 ((String.length expr) - 1)))
+                else Symbol expr
             | _ -> failwith ("parse_one was unable to match expr with a defined pattern: " ^ expr)
         let all_symbols nodes =
             Queue.fold
@@ -112,6 +105,8 @@ module Parser =
                 parse_expr expr, rest_tokens
             | None_, Tokenizer.OpeningBracket :: rest_tokens ->
                 parse_one (Sequence []) rest_tokens
+            | None_, Tokenizer.QuotedOpeningBracket :: rest_tokens ->
+                parse_one (Quote (Sequence [])) rest_tokens
             | Sequence (nodes), Tokenizer.Word(expr) :: rest_tokens ->
                 let node = parse_expr expr in
                 parse_one (Sequence (nodes @ [node])) rest_tokens
@@ -126,7 +121,7 @@ module Parser =
                     | Symbol "lambda" :: _ -> (parse_lambda nodes), rest_tokens
                     | _ -> curr, rest_tokens
                 end
-            | _, _ -> failwith "parse_one unreachable code"
+            | _ -> failwith "parse_one unreachable code"
         let rec parse tokens =
             match tokens with
             | [] -> []
