@@ -28,10 +28,6 @@ module Evaluator =
                 (try_eval_int env (List.hd params))
                 (List.to_seq params |> Seq.drop 1)
         and apply env proc params =
-            (* let () = print_string ( *)
-            (*     "apply proc " ^ Parser.to_string proc ^ *)
-            (*     " to params " ^ Parser.to_string_nodes params true *)
-            (* ); print_newline () in *)
             match proc with
             | Parser.Symbol(expr) ->
                 begin
@@ -54,6 +50,32 @@ module Evaluator =
                                     | _ -> Pair (param_1_evaluated, param_2_evaluated)
                                 end
                             | _ -> failwith ("apply receive invalid params for cons " ^ (Parser.to_string_nodes params true))
+                        end
+                    | "car" ->
+                        begin
+                            match params with
+                            | param :: [] ->
+                                begin
+                                    let param_evaluated = eval env param in
+                                    match param_evaluated with
+                                    | Parser.Pair (node, _) -> node
+                                    | Parser.Sequence (node :: _) -> node
+                                    | _ -> failwith ("apply received invalid params for car " ^ (Parser.to_string_nodes params true))
+                                end
+                            | _ -> failwith ("apply received invalid params for car " ^ (Parser.to_string_nodes params true))
+                        end
+                    | "cdr" ->
+                        begin
+                            match params with
+                            | param :: [] ->
+                                begin
+                                    let param_evaluated = eval env param in
+                                    match param_evaluated with
+                                    | Parser.Pair (_, node) -> node
+                                    | Parser.Sequence (_ :: nodes) -> Parser.Sequence nodes
+                                    | _ -> failwith ("apply received invalid params for cdr " ^ (Parser.to_string_nodes params true))
+                                end
+                            | _ -> failwith ("apply received invalid params for cdr " ^ (Parser.to_string_nodes params true))
                         end
                     | "+" -> Parser.NumberInt(make_operator_handler env (+) params) 
                     | "-" -> Parser.NumberInt(make_operator_handler env (-) params) 
@@ -117,14 +139,6 @@ module Evaluator =
                 end
             | Parser.Quote node -> node
             | Parser.Sequence nodes ->
-                (* A hairy bug was found here: `Queue.take` mutates nodes and
-                   make the first node/the operator "disappear". As a result,
-                   later application is not applicable anymore. `Queue.copy` is
-                   used as a counter-measure.
-
-                   TODO: change every underlying types to using `List`, as it is
-                   immutable and easier for pattern-maching comparing to `Queue`
-                   *)
                 begin
                     match nodes with
                     | proc :: params -> apply env proc params

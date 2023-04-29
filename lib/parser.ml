@@ -133,6 +133,8 @@ module Parser =
                     | Symbol "define" :: _ -> (parse_define nodes), rest_tokens
                     | Symbol "if" :: _ -> (parse_if nodes), rest_tokens
                     | Symbol "lambda" :: _ -> (parse_lambda nodes), rest_tokens
+                    | node_1 :: Symbol "." :: node_2 :: [] ->
+                        Pair (node_1, node_2), rest_tokens
                     | _ -> curr, rest_tokens
                 end
             | _ -> failwith "parse_one unreachable code"
