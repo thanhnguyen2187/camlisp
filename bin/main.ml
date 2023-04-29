@@ -21,6 +21,7 @@ let rec read_eval_print env state curr =
         (* |> List.iter print_string *)
         (* |> print_newline *)
         |> Parser.parse
+        (* |> List.to_seq *)
         |> Evaluator.eval_nodes env
         |> Seq.map Parser.to_string
         |> Seq.iter

@@ -8,11 +8,18 @@ module Evaluator =
             | Parser.NumberInt(v1), Parser.NumberInt(v2) -> v1 = v2
             | _ -> false
         let default_env : (string, Parser.node) Hashtbl.t = Hashtbl.create 10
+        let is_self_eval = function
+            | Parser.Bool (_)
+            | Parser.Func (_, _)
+            | Parser.NumberInt (_)
+            | Parser.NumberFloat (_)
+            | Parser.String_ (_) -> true
+            | _ -> false
         let rec try_eval_int env node =
             let result = eval env node in
             match result with
             | Parser.NumberInt(value) -> value
-            | _ -> failwith ("try_eval_int cannot make an int out of " ^ Parser.to_string result)
+            | _ -> failwith ("try_eval_int cannot make an int out of " ^ Parser.to_string node)
         and make_operator_handler env op params =
             Seq.fold_left
                 (fun curr node ->
@@ -29,6 +36,12 @@ module Evaluator =
             | Parser.Symbol(expr) ->
                 begin
                     match expr with
+                    | "quote" ->
+                        begin
+                            match params with
+                            | node :: [] -> node
+                            | _ -> failwith ("apply receive invalid params for quote " ^ (Parser.to_string_nodes params true))
+                        end
                     | "+" -> Parser.NumberInt(make_operator_handler env (+) params) 
                     | "-" -> Parser.NumberInt(make_operator_handler env (-) params) 
                     | "*" -> Parser.NumberInt(make_operator_handler env ( * ) params) 
@@ -73,12 +86,7 @@ module Evaluator =
             )
         and eval env node =
             match node with
-            (* self evaluating *)
-            | Parser.Bool (_)
-            | Parser.Func (_, _)
-            | Parser.NumberInt (_)
-            | Parser.NumberFloat (_)
-            | Parser.String_ (_) -> node
+            | _ when is_self_eval node -> node
 
             (* other node types *)
             | Parser.If (pred, conseq, alt) ->
