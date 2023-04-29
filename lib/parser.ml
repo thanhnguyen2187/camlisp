@@ -10,6 +10,7 @@ module Parser =
             | String_ of string
             | Symbol of string
             | Quote of node
+            | Pair of node * node
             | Sequence of node list
             | Define of string * node
             | Func of node list * node list
@@ -22,6 +23,8 @@ module Parser =
             | String_ (value) -> Format.sprintf "\"%s\"" value
             | Symbol (value) -> value
             | Quote (node) -> Format.sprintf "(quote %s)" (to_string node)
+            | Pair (node_1, node_2) ->
+                Format.sprintf "(%s . %s)" (to_string node_1) (to_string node_2)
             | Define (symbol, value) ->
                 Format.sprintf
                     "(define %s %s)"

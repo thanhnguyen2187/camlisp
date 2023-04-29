@@ -42,6 +42,12 @@ module Evaluator =
                             | node :: [] -> node
                             | _ -> failwith ("apply receive invalid params for quote " ^ (Parser.to_string_nodes params true))
                         end
+                    | "cons" ->
+                        begin
+                            match params with
+                            | param_1 :: param_2 :: [] -> Parser.Pair (param_1, param_2)
+                            | _ -> failwith ("apply receive invalid params for cons " ^ (Parser.to_string_nodes params true))
+                        end
                     | "+" -> Parser.NumberInt(make_operator_handler env (+) params) 
                     | "-" -> Parser.NumberInt(make_operator_handler env (-) params) 
                     | "*" -> Parser.NumberInt(make_operator_handler env ( * ) params) 
