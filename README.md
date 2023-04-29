@@ -67,7 +67,7 @@ Test the REPL:
 - [x] Implement `lambda`
 - [x] Implement `define`
 - [ ] Implement `cons`, `car` and `cdr`
-- [ ] Implement `quote`
+- [x] Implement `quote`
 - [ ] Implement `let` and `let*`
 - [ ] Implement `set!`
 - [ ] Implement `eval` and `apply`
