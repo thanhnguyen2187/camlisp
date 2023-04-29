@@ -45,7 +45,14 @@ module Evaluator =
                     | "cons" ->
                         begin
                             match params with
-                            | param_1 :: param_2 :: [] -> Parser.Pair (param_1, param_2)
+                            | param_1 :: param_2 :: [] ->
+                                let param_1_evaluated = eval env param_1 in
+                                let param_2_evaluated = eval env param_2 in
+                                begin
+                                    match param_1_evaluated, param_2_evaluated with
+                                    | _, Sequence nodes -> Sequence (param_1_evaluated :: nodes)
+                                    | _ -> Pair (param_1_evaluated, param_2_evaluated)
+                                end
                             | _ -> failwith ("apply receive invalid params for cons " ^ (Parser.to_string_nodes params true))
                         end
                     | "+" -> Parser.NumberInt(make_operator_handler env (+) params) 
