@@ -107,7 +107,7 @@ module Parser =
                 failwith ("parse_define received an invalid node " ^ to_string_nodes nodes true)
         let parse_if nodes =
             match nodes with
-            | Symbol "if" :: pred :: conseq :: alt :: [] -> If(pred, conseq, alt)
+            | Symbol "if" :: pred :: conseq :: alt :: [] -> If (pred, conseq, alt)
             | _ -> failwith ("parse_if received an invalid node " ^ to_string (Sequence nodes))
         let rec parse_one curr tokens =
             match curr, tokens with
