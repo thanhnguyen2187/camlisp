@@ -65,8 +65,10 @@ Test the REPL:
     and `float`
   - [ ] Find a strategy to turn the operators into a "normal" `Func`?
 - [x] Implement `lambda`
+  - [ ] Add dot notation
 - [x] Implement `define`
-- [ ] Implement `cons`, `car` and `cdr`
+  - [ ] Add dot notation
+- [x] Implement `cons`, `car` and `cdr`
 - [x] Implement `quote`
 - [ ] Implement `let` and `let*`
 - [ ] Implement `set!`
