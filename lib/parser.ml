@@ -19,20 +19,25 @@ module Parser =
             | None_ -> "null"
             | NumberInt (value) -> string_of_int value
             | NumberFloat (value) -> string_of_float value
-            | String_ (value) -> "\"" ^ value ^ "\""
+            | String_ (value) -> Format.sprintf "\"%s\"" value
             | Symbol (value) -> value
             | Quote (node) -> Format.sprintf "(quote %s)" (to_string node)
-            | Define (symbol, value)
-                -> "(" ^ symbol ^ " "
-                ^ (to_string value) ^ ")"
+            | Define (symbol, value) ->
+                Format.sprintf
+                    "(define %s %s)"
+                    symbol
+                    (to_string value)
             | Sequence (params) -> to_string_nodes params true
             | Func (params, body) ->
-                "(lambda " ^ to_string_nodes params true ^ " "
-                ^ to_string_nodes body false ^ ")"
+                Format.sprintf
+                    "(lambda %s %s)"
+                    (to_string_nodes params true)
+                    (to_string_nodes body false)
             | If (pred, conseq, alt) ->
-                    "(if " ^ to_string pred ^ " "
-                    ^ to_string conseq ^" "
-                    ^ to_string alt ^ ")"
+                Format.sprintf "(if %s %s %s)"
+                    (to_string pred)
+                    (to_string conseq)
+                    (to_string alt)
             | Bool (value) ->
                 if value
                 then "#t"
@@ -54,7 +59,7 @@ module Parser =
         (* bool_regex needs extra slash (\), since OCaml syntax for raw string
            does not get the pipe (|) without the slash *)
         let bool_regex = Str.regexp {|^true\|false\|#t\|#f$|}
-        let parse_expr expr =
+        let rec parse_expr expr =
             match expr with
             | expr when Str.string_match number_int_regex expr 0 ->
                 NumberInt (int_of_string expr)
@@ -70,7 +75,9 @@ module Parser =
                 Bool (String.contains expr 't')
             | expr when Str.string_match symbol_regex expr 0 ->
                 if String.starts_with ~prefix:"'" expr
-                then Quote (Symbol (String.sub expr 0 ((String.length expr) - 1)))
+                then
+                    let symbol = parse_expr (String.sub expr 1 ((String.length expr) - 1)) in
+                    Quote symbol
                 else Symbol expr
             | _ -> failwith ("parse_one was unable to match expr with a defined pattern: " ^ expr)
         let all_symbols nodes =
@@ -106,13 +113,17 @@ module Parser =
             | None_, Tokenizer.OpeningBracket :: rest_tokens ->
                 parse_one (Sequence []) rest_tokens
             | None_, Tokenizer.QuotedOpeningBracket :: rest_tokens ->
-                parse_one (Quote (Sequence [])) rest_tokens
+                let result, rest_tokens = parse_one (Sequence []) rest_tokens in
+                Quote result, rest_tokens
             | Sequence (nodes), Tokenizer.Word(expr) :: rest_tokens ->
                 let node = parse_expr expr in
                 parse_one (Sequence (nodes @ [node])) rest_tokens
             | Sequence (nodes), Tokenizer.OpeningBracket :: rest_tokens ->
                 let appl, rest_tokens = parse_one (Sequence []) rest_tokens in
                 parse_one (Sequence (nodes @ [appl])) rest_tokens
+            | Sequence nodes, Tokenizer.QuotedOpeningBracket :: rest_tokens ->
+                let appl, rest_tokens = parse_one (Sequence []) rest_tokens in
+                parse_one (Sequence (nodes @ [Quote appl])) rest_tokens
             | Sequence (nodes), Tokenizer.ClosingBracket :: rest_tokens ->
                 begin
                     match nodes with
