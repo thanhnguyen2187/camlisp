@@ -14,6 +14,7 @@ module Parser =
             | Sequence of node list
             | Define of string * node
             | Func of node list * node list
+            | Let of node list * node list
             | If of node * node * node
         let rec to_string n =
             match n with
@@ -35,6 +36,11 @@ module Parser =
                 Format.sprintf
                     "(lambda %s %s)"
                     (to_string_nodes params true)
+                    (to_string_nodes body false)
+            | Let (bindings, body) ->
+                Format.sprintf
+                    "(let %s %s)"
+                    (to_string_nodes bindings true)
                     (to_string_nodes body false)
             | If (pred, conseq, alt) ->
                 Format.sprintf "(if %s %s %s)"
@@ -109,6 +115,10 @@ module Parser =
             match nodes with
             | Symbol "if" :: pred :: conseq :: alt :: [] -> If (pred, conseq, alt)
             | _ -> failwith ("parse_if received an invalid node " ^ to_string (Sequence nodes))
+        let parse_let nodes =
+            match nodes with
+            | Symbol "let" :: Sequence bindings :: body -> Let (bindings, body)
+            | _ -> failwith ("parse_let received an invalid node " ^ to_string (Sequence nodes))
         let rec parse_one curr tokens =
             match curr, tokens with
             | None_, Tokenizer.Word(expr) :: rest_tokens ->
@@ -133,6 +143,7 @@ module Parser =
                     | Symbol "define" :: _ -> (parse_define nodes), rest_tokens
                     | Symbol "if" :: _ -> (parse_if nodes), rest_tokens
                     | Symbol "lambda" :: _ -> (parse_lambda nodes), rest_tokens
+                    | Symbol "let" :: _ -> (parse_let nodes), rest_tokens
                     | node_1 :: Symbol "." :: node_2 :: [] ->
                         Pair (node_1, node_2), rest_tokens
                     | _ -> curr, rest_tokens

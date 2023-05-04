@@ -122,8 +122,26 @@ module Evaluator =
         and eval env node =
             match node with
             | _ when is_self_eval node -> node
-
-            (* other node types *)
+            | Parser.Let (bindings, body) ->
+                begin
+                    let env_copy = Hashtbl.copy env in
+                    let rec bind_each env = function
+                        | [] -> ()
+                        | (Parser.Sequence ((Symbol name) :: node :: [])) :: rest ->
+                            Hashtbl.add env name (eval env node);
+                            bind_each env rest
+                        | _ -> failwith "eval bind_each of let received invalid parameter"
+                    in
+                    bind_each env_copy bindings;
+                    let rec eval_each env = function
+                        | node :: [] -> eval env node
+                        | node :: rest_nodes ->
+                            let _ = eval env node
+                            in eval_each env rest_nodes
+                        | _ -> failwith "eval eval_each of let received invalid parameter"
+                    in
+                    eval_each env_copy body
+                end
             | Parser.If (pred, conseq, alt) ->
                 begin
                     match (eval env pred) with
