@@ -64,9 +64,11 @@ module Parser =
         let number_int_regex = Str.regexp {|^[-+]?[0-9]+$|}
         let number_float_regex = Str.regexp {|^[-+]?[0-9]+\.[0-9]+$|}
         let string_regex = Str.regexp {|^".*"$|}
-        let symbol_regex = Str.regexp {|^[a-zA-Z+-/*='][a-zA-Z0-9\.-]*$|}
-        (* bool_regex needs extra slash (\), since OCaml syntax for raw string
-           does not get the pipe (|) without the slash *)
+        (* symbol_regex needs a slash (\) before (!) since without the slash,
+           it will not work for `set!` or names like that *)
+        let symbol_regex = Str.regexp {|^[a-zA-Z+-/*='][a-zA-Z0-9\.-\!]*$|}
+        (* bool_regex needs an extra slash (\), since OCaml syntax for raw
+           string does not get the pipe (|) without the slash *)
         let bool_regex = Str.regexp {|^true\|false\|#t\|#f$|}
         let rec parse_expr expr =
             match expr with

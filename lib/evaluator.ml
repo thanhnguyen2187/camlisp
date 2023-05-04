@@ -77,6 +77,15 @@ module Evaluator =
                                 end
                             | _ -> failwith ("apply received invalid params for cdr " ^ (Parser.to_string_nodes params true))
                         end
+                    | "set!" ->
+                        begin
+                            match params with
+                            | Parser.Symbol (name) :: node :: [] ->
+                                let result = eval env node in
+                                Hashtbl.replace env name result;
+                                result
+                            | _ -> failwith ("apply received invalid params for set!" ^ Parser.to_string_nodes params true)
+                        end
                     | "+" -> Parser.NumberInt(make_operator_handler env (+) params) 
                     | "-" -> Parser.NumberInt(make_operator_handler env (-) params) 
                     | "*" -> Parser.NumberInt(make_operator_handler env ( * ) params) 
@@ -160,12 +169,8 @@ module Evaluator =
                 begin
                     match nodes with
                     | proc :: params -> apply env proc params
-                    | _ -> failwith ""
+                    | _ -> failwith ("eval sequence unreachable code with data " ^ Parser.to_string_nodes nodes true)
                 end
-                (* let nodes = Queue.copy nodes in *)
-                (* let proc = Queue.take nodes in *)
-                (* let params = nodes in *)
-                (* apply env proc params *)
             | Parser.Define (name, node) ->
                 let node_result = eval env node in
                 Hashtbl.add env name node_result;
