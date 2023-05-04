@@ -70,11 +70,14 @@ Test the REPL:
   - [ ] Add dot notation
 - [x] Implement `cons`, `car` and `cdr`
 - [x] Implement `quote`
-- [x] Implement `let` and `let*`
-  - `let` acts like `let*` in this case for the way `env` works
+- [x] Implement `let` and `let*` (done since `let` acts like `let*` in this case
+  for the way `env` works)
 - [x] Implement `set!`
 - [ ] Implement `eval` and `apply`
 - [ ] Research how to release/distribute the built binary
 - [ ] Improve error handling by separating user's error to internal evaluator
   error
+- [ ] Implement a "proper" CLI experience that has two modes: interactive (REPL)
+  and file interpreting (file path as argument)
+- [ ] Add testing
 
