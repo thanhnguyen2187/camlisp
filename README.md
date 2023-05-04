@@ -70,7 +70,8 @@ Test the REPL:
   - [ ] Add dot notation
 - [x] Implement `cons`, `car` and `cdr`
 - [x] Implement `quote`
-- [ ] Implement `let` and `let*`
+- [x] Implement `let` and `let*`
+  - `let` acts like `let*` in this case for the way `env` works
 - [ ] Implement `set!`
 - [ ] Implement `eval` and `apply`
 - [ ] Research how to release/distribute the built binary
