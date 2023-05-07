@@ -11,18 +11,39 @@ module Tokenizer =
             | QuotedOpeningBracket -> "(token quoted-opening-bracket)"
             | ClosingBracket -> "(token closing-bracket)"
             | Word(expr) -> Format.sprintf "(token \"%s\")" expr
+
+        (* TODO: improve the function by letting it receive `token`s instead of
+           raw text *)
         let is_balanced text =
             let stack = Stack.create () in
-            let () = String.iter
-                (fun char ->
+            let rec f text =
+                let n = String.length text in
+                if n = 0
+                then Stack.length stack = 0
+                else
+                    let char = text.[0] in
+                    let rest_text = (String.sub text 1 (n - 1)) in
                     match char with
-                    | '(' -> Stack.push char stack
-                    | ')' -> let _ = Stack.pop stack in ()
-                    | _ -> ())
-                text
-            in (Stack.length stack) = 0
-        let strip_input text =
-            Str.replace_first (Str.regexp "[ \t\r\n]*$") "" text
+                    | '(' ->
+                        Stack.push char stack;
+                        f rest_text
+                    | ')' ->
+                        begin
+                            match Stack.pop_opt stack with
+                            | Some('(')-> f rest_text
+                            | _ -> false
+                        end
+                    | _ -> f rest_text
+            in f text
+        let%test "is_balanced__blank_input" =
+            is_balanced "" = true
+        let%test "is_balanced__good_input" =
+            is_balanced "()" = true
+        let%test "is_balanced__missing_)" =
+            (is_balanced "((") = false
+        let%test "is_balanced__missing_(" =
+            (is_balanced "))") = false
+
         let tokenize text =
             let rec f tokens expr text =
             let n = String.length text in
