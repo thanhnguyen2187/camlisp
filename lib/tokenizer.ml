@@ -9,6 +9,7 @@ module Tokenizer =
             | QuotedOpeningBracket
             | ClosingBracket
             | Word of string
+            [@@deriving compare, sexp]
         let to_string token =
             match token with
             | OpeningBracket -> "(token opening-bracket)"
@@ -82,21 +83,21 @@ module Tokenizer =
             tokenize "(word)" = [OpeningBracket; Word "word"; ClosingBracket]
         let%test "tokenize__quoted_bracket" =
             tokenize "'(word)" = [QuotedOpeningBracket; Word "word"; ClosingBracket]
-        (* let%test_unit "tokenize__unit" = *)
-        (*     [%test_eq: token list] *)
-        (*     (tokenize "'(f (+ x 1) y '())") *)
-        (*     [ *)
-        (*         QuotedOpeningBracket; *)
-        (*         Word "f"; *)
-        (*         OpeningBracket; *)
-        (*         Word "+"; *)
-        (*         Word "x"; *)
-        (*         Word "1"; *)
-        (*         ClosingBracket; *)
-        (*         Word "y"; *)
-        (*         QuotedOpeningBracket; *)
-        (*         ClosingBracket; *)
-        (*         ClosingBracket; *)
-        (*     ] *)
+        let%test_unit "tokenize__complex_case" =
+            [%test_eq: token list]
+            (tokenize "'(f (+ x 1) y '())")
+            [
+                QuotedOpeningBracket;
+                Word "f";
+                OpeningBracket;
+                Word "+";
+                Word "x";
+                Word "1";
+                ClosingBracket;
+                Word "y";
+                QuotedOpeningBracket;
+                ClosingBracket;
+                ClosingBracket;
+            ]
     end
 
