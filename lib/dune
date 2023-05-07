@@ -1,4 +1,6 @@
 (library
  (name camlisp)
+ (inline_tests)
+ (preprocess (pps ppx_inline_test ppx_assert))
  (modules Tokenizer Parser Evaluator)
- (libraries str))
+ (libraries str sexplib))
