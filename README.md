@@ -58,6 +58,12 @@ Test the REPL:
 120
 ```
 
+Run unit tests:
+
+```shell
+dune test
+```
+
 ## TODO
 
 - [x] Implement `+`, `-`, `*`, and `/`
@@ -79,5 +85,9 @@ Test the REPL:
   error
 - [ ] Implement a "proper" CLI experience that has two modes: interactive (REPL)
   and file interpreting (file path as argument)
-- [ ] Add testing
+- [ ] Add tests
+  - [x] `Tokenizer.is_balance`
+  - [x] `Tokenizer.tokenize`
+  - [ ] `Parser.*`
+  - [ ] `Evaluator.*`
 
