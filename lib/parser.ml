@@ -1,3 +1,6 @@
+open Ppx_compare_lib.Builtin
+open Sexplib.Std
+
 open Tokenizer
 
 module Parser =
@@ -16,6 +19,7 @@ module Parser =
             | Func of node list * node list
             | Let of node list * node list
             | If of node * node * node
+            [@@deriving compare, sexp]
         let rec to_string n =
             match n with
             | None_ -> "null"
@@ -91,6 +95,30 @@ module Parser =
                     Quote symbol
                 else Symbol expr
             | _ -> failwith ("parse_one was unable to match expr with a defined pattern: " ^ expr)
+        let%test_unit "parse_expr__number_int" =
+            [%test_eq: node] (parse_expr "123") (NumberInt 123);
+            [%test_eq: node] (parse_expr "+123") (NumberInt 123);
+            [%test_eq: node] (parse_expr "-456") (NumberInt (-456));
+            ()
+        let%test_unit "parse_expr__number_float" =
+            [%test_eq: node] (parse_expr "1.01") (NumberFloat 1.01);
+            [%test_eq: node] (parse_expr "-2.0") (NumberFloat (-2.0));
+            ()
+        let%test_unit "parse_expr__string" =
+            [%test_eq: node] (parse_expr "\"a string\"") (String_ "a string");
+            ()
+        let%test_unit "parse_expr__bool" =
+            ([%test_eq: node] (parse_expr "true") (Bool true));
+            ([%test_eq: node] (parse_expr "#t") (Bool true));
+            ([%test_eq: node] (parse_expr "false") (Bool false));
+            ([%test_eq: node] (parse_expr "#f") (Bool false));
+            ()
+        let%test_unit "parse_symbol" =
+            ([%test_eq: node] (parse_expr "a") (Symbol "a"));
+            ([%test_eq: node] (parse_expr "+") (Symbol "+"));
+            ([%test_eq: node] (parse_expr "set!") (Symbol "set!"));
+            ()
+
         let all_symbols nodes =
             Queue.fold
                 (fun curr node ->
