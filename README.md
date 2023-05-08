@@ -88,6 +88,12 @@ dune test
 - [ ] Add tests
   - [x] `Tokenizer.is_balance`
   - [x] `Tokenizer.tokenize`
-  - [ ] `Parser.*`
+  - [x] `Parser.parse_expr`
+  - [ ] `Parser.parse_lambda`
+  - [ ] `Parser.parse_define`
+  - [ ] `Parser.parse_if`
+  - [ ] `Parser.parse_let`
+  - [ ] `Parser.parse_one`
+  - [ ] `Parser.parse`
   - [ ] `Evaluator.*`
 
