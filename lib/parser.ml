@@ -113,7 +113,7 @@ module Parser =
             ([%test_eq: node] (parse_expr "false") (Bool false));
             ([%test_eq: node] (parse_expr "#f") (Bool false));
             ()
-        let%test_unit "parse_symbol" =
+        let%test_unit "parse_expr__symbol" =
             ([%test_eq: node] (parse_expr "a") (Symbol "a"));
             ([%test_eq: node] (parse_expr "+") (Symbol "+"));
             ([%test_eq: node] (parse_expr "set!") (Symbol "set!"));
