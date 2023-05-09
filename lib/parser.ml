@@ -119,15 +119,6 @@ module Parser =
             ([%test_eq: node] (parse_expr "set!") (Symbol "set!"));
             ()
 
-        let all_symbols nodes =
-            Queue.fold
-                (fun curr node ->
-                    match curr, node with
-                    | false, _ -> false
-                    | true, Symbol _ -> true
-                    | _ -> failwith "all_symbols unreachable code")
-                true
-                nodes
         let parse_lambda nodes =
             match nodes with
             | Symbol "lambda" :: Sequence params :: body ->
