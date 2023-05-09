@@ -124,6 +124,17 @@ module Parser =
             | Symbol "lambda" :: Sequence params :: body ->
                 Func (params, body)
             | _ -> failwith ("parse_lambda received an invalid node " ^ to_string_nodes nodes true)
+        let%test_unit "parse_lambda" =
+            ([%test_eq: node]
+                (parse_lambda
+                [
+                    (Symbol "lambda");
+                    (Sequence [Symbol "x"]);
+                    (Symbol "x")
+                ])
+                (Func ([Symbol "x"], [Symbol "x"])));
+            ()
+
         let parse_define nodes =
             match nodes with
             | Symbol "define" :: Symbol name :: node :: [] ->
