@@ -89,7 +89,7 @@ dune test
   - [x] `Tokenizer.is_balance`
   - [x] `Tokenizer.tokenize`
   - [x] `Parser.parse_expr`
-  - [ ] `Parser.parse_lambda`
+  - [x] `Parser.parse_lambda`
   - [ ] `Parser.parse_define`
   - [ ] `Parser.parse_if`
   - [ ] `Parser.parse_let`
