@@ -90,7 +90,7 @@ dune test
   - [x] `Tokenizer.tokenize`
   - [x] `Parser.parse_expr`
   - [x] `Parser.parse_lambda`
-  - [ ] `Parser.parse_define`
+  - [x] `Parser.parse_define`
   - [ ] `Parser.parse_if`
   - [ ] `Parser.parse_let`
   - [ ] `Parser.parse_one`
