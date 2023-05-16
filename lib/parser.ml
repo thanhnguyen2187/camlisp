@@ -128,9 +128,9 @@ module Parser =
             ([%test_eq: node]
                 (parse_lambda
                 [
-                    (Symbol "lambda");
-                    (Sequence [Symbol "x"]);
-                    (Symbol "x")
+                    Symbol "lambda";
+                    Sequence [Symbol "x"];
+                    Symbol "x"
                 ])
                 (Func ([Symbol "x"], [Symbol "x"])));
             ()
