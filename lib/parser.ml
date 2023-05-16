@@ -143,10 +143,41 @@ module Parser =
                 Define (name, Func (params, body))
             | _ ->
                 failwith ("parse_define received an invalid node " ^ to_string_nodes nodes true)
+        let%test_unit "parse_define" =
+            ([%test_eq: node]
+                (parse_define
+                [
+                    Symbol "define";
+                    Symbol "x";
+                    NumberInt 1;
+                ])
+                (Define ("x", NumberInt 1)));
+            ([%test_eq: node]
+                (parse_define
+                [
+                    Symbol "define";
+                    (Sequence [Symbol "f"; Symbol "x"]);
+                    Symbol "x";
+                ])
+                (Define ("f", Func ([Symbol "x"], [Symbol "x"]))));
+            ()
+
         let parse_if nodes =
             match nodes with
             | Symbol "if" :: pred :: conseq :: alt :: [] -> If (pred, conseq, alt)
             | _ -> failwith ("parse_if received an invalid node " ^ to_string (Sequence nodes))
+        let%test_unit "parse_if" =
+            ([%test_eq: node]
+                (parse_if
+                [
+                    Symbol "if";
+                    Symbol "#t";
+                    NumberInt 1;
+                    NumberInt 2;
+                ])
+                (If (Symbol "#t", NumberInt 1, NumberInt 2)));
+            ()
+
         let parse_let nodes =
             match nodes with
             | Symbol "let" :: Sequence bindings :: body -> Let (bindings, body)
