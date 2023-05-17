@@ -95,5 +95,10 @@ dune test
   - [x] `Parser.parse_let`
   - [x] `Parser.parse_one`
   - [x] `Parser.parse`
-  - [ ] `Evaluator.*`
+  - [x] `Evaluator.compare_nodes`
+  - [ ] `Evaluator.is_self_eval`
+  - [ ] `Evaluator.try_eval_int`
+  - [ ] `Evaluator.make_operator_handler`
+  - [ ] `Evaluator.apply`
+  - [ ] `Evaluator.eval`
 
