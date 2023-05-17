@@ -182,6 +182,19 @@ module Parser =
             match nodes with
             | Symbol "let" :: Sequence bindings :: body -> Let (bindings, body)
             | _ -> failwith ("parse_let received an invalid node " ^ to_string (Sequence nodes))
+        let%test_unit "parse_let" =
+            ([%test_eq: node]
+                (parse_let
+                [
+                    Symbol "let";
+                    Sequence [
+                        Sequence [Symbol "x"; NumberInt 1];
+                    ];
+                    Symbol "x"
+                ])
+                (Let ([Sequence [Symbol "x"; NumberInt 1]], [Symbol "x"])));
+            ()
+
         let rec parse_one curr tokens =
             match curr, tokens with
             | None_, Tokenizer.Word(expr) :: rest_tokens ->
