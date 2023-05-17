@@ -225,6 +225,17 @@ module Parser =
                     | _ -> curr, rest_tokens
                 end
             | _ -> failwith "parse_one unreachable code"
+        let%test_unit "parse_one" =
+            ([%test_eq: node * Tokenizer.token list]
+                (parse_one None_ [Tokenizer.Word "x"])
+                (Symbol "x", []));
+            ([%test_eq: node * Tokenizer.token list]
+                (parse_one
+                    None_
+                    [Tokenizer.Word "1"; Tokenizer.Word "2"])
+                (NumberInt 1, [Tokenizer.Word "2"]));
+            ()
+
         let rec parse tokens =
             match tokens with
             | [] -> []
