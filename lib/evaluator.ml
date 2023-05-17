@@ -1,13 +1,32 @@
+open Ppx_compare_lib.Builtin
+open Sexplib.Std
+
 open Parser
 
 module Evaluator =
     struct
+        let default_env : (string, Parser.node) Hashtbl.t = Hashtbl.create 10
+
         let compare_nodes n1 n2 =
             match n1, n2 with
             | Parser.Bool(v1), Parser.Bool(v2) -> v1 = v2
             | Parser.NumberInt(v1), Parser.NumberInt(v2) -> v1 = v2
             | _ -> false
-        let default_env : (string, Parser.node) Hashtbl.t = Hashtbl.create 10
+        let%test_unit "compare_nodes" =
+            [%test_eq: bool]
+                (compare_nodes (Parser.Bool true) (Parser.Bool true))
+                true;
+            [%test_eq: bool]
+                (compare_nodes (Parser.Bool false) (Parser.Bool true))
+                false;
+            [%test_eq: bool]
+                (compare_nodes (Parser.NumberInt 1) (Parser.NumberInt 1))
+                true;
+            [%test_eq: bool]
+                (compare_nodes (Parser.NumberInt 3) (Parser.NumberInt 4))
+                false;
+            ()
+
         let is_self_eval = function
             | Parser.Bool (_)
             | Parser.Func (_, _)
