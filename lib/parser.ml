@@ -202,6 +202,7 @@ module Parser =
             | None_, Tokenizer.OpeningBracket :: rest_tokens ->
                 parse_one (Sequence []) rest_tokens
             | None_, Tokenizer.QuotedOpeningBracket :: rest_tokens ->
+                (* TODO: optimize this non-recursive tail call *)
                 let result, rest_tokens = parse_one (Sequence []) rest_tokens in
                 Quote result, rest_tokens
             | Sequence (nodes), Tokenizer.Word(expr) :: rest_tokens ->
