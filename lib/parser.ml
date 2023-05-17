@@ -242,6 +242,30 @@ module Parser =
             | _ ->
                 let node, rest_tokens = parse_one None_ tokens
                 in node :: parse rest_tokens
+        let%test_unit "parse" =
+            ([%test_eq: node list]
+                (parse [Tokenizer.Word "x"])
+                [Symbol "x"]);
+            ([%test_eq: node list]
+                (parse [
+                    Tokenizer.OpeningBracket;
+                    Tokenizer.Word "+";
+                    Tokenizer.Word "1";
+                    Tokenizer.Word "2";
+                    Tokenizer.ClosingBracket;
+
+                    Tokenizer.Word "x";
+                ])
+                [
+                    Sequence [
+                        Symbol "+";
+                        NumberInt 1;
+                        NumberInt 2;
+                    ];
+
+                    Symbol "x";
+                ]);
+            ()
     end
 ;;
 
