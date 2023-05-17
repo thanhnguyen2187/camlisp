@@ -91,8 +91,8 @@ dune test
   - [x] `Parser.parse_expr`
   - [x] `Parser.parse_lambda`
   - [x] `Parser.parse_define`
-  - [ ] `Parser.parse_if`
-  - [ ] `Parser.parse_let`
+  - [x] `Parser.parse_if`
+  - [x] `Parser.parse_let`
   - [ ] `Parser.parse_one`
   - [ ] `Parser.parse`
   - [ ] `Evaluator.*`
