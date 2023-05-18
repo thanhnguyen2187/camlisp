@@ -1,6 +1,4 @@
-open Camlisp.Tokenizer
-open Camlisp.Parser
-open Camlisp.Evaluator
+open Camlisp
 
 type input_state =
     | Prompting of string
