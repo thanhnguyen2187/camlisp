@@ -30,6 +30,27 @@ let is_self_eval = function
     | Parser.NumberFloat (_)
     | Parser.String_ (_) -> true
     | _ -> false
+let%test_unit "is_self_eval" =
+    [%test_eq: bool]
+        (is_self_eval (Parser.Bool true))
+        true;
+    [%test_eq: bool]
+        (is_self_eval (Parser.Func ([Symbol "x"], [Symbol "x"])))
+        true;
+    [%test_eq: bool]
+        (is_self_eval (Parser.NumberInt 1))
+        true;
+    [%test_eq: bool]
+        (is_self_eval (Parser.NumberFloat 1.0))
+        true;
+    [%test_eq: bool]
+        (is_self_eval (Parser.String_ "abc"))
+        true;
+    [%test_eq: bool]
+        (is_self_eval (Parser.If (Parser.Bool true, Parser.NumberInt 1, Parser.NumberInt 2)))
+        false;
+    ()
+
 let rec try_eval_int env node =
     let result = eval env node in
     match result with
