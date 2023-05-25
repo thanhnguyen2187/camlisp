@@ -212,8 +212,12 @@ and eval env node =
         Hashtbl.add env name node_result;
         node_result
     | _ -> failwith ("eval node not implemented " ^ Parser.to_string node)
-and eval_nodes env nodes =
-    Seq.map
-        (fun node -> eval env node)
-        (List.to_seq nodes)
+
+let%test_unit "try_eval_int" =
+    let env : (string, Parser.node) Hashtbl.t = Hashtbl.create 0 in ();
+    (* TODO: test for failure *)
+    [%test_eq: int]
+        (try_eval_int env (Parser.NumberInt 3))
+        3;
+    ()
 
