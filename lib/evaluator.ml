@@ -221,3 +221,19 @@ let%test_unit "try_eval_int" =
         3;
     ()
 
+let%test_unit "make_operator_handler" =
+    let env : (string, Parser.node) Hashtbl.t = Hashtbl.create 0 in ();
+    [%test_eq: int]
+        (make_operator_handler env (+) [NumberInt 1; NumberInt 2])
+        (1 + 2);
+    [%test_eq: int]
+        (make_operator_handler env (-) [NumberInt 1; NumberInt 2])
+        (1 - 2);
+    [%test_eq: int]
+        (make_operator_handler env ( * ) [NumberInt 2; NumberInt 3])
+        (2 * 3);
+    [%test_eq: int]
+        (make_operator_handler env (/) [NumberInt 2; NumberInt 3])
+        (2 / 3);
+    ()
+
