@@ -142,14 +142,14 @@ and apply env proc params =
     | Parser.Func(fn_params, body) ->
         (* TODO: optimize by looking at the way `Hashtbl.add` works *)
         let new_env = Hashtbl.copy env in
-        Seq.iter2
+        List.iter2
             (fun fn_param param ->
                 match fn_param with
                 | Parser.Symbol(fn_param_sym) ->
                     Hashtbl.add new_env fn_param_sym (eval env param)
                 | _ -> failwith "apply error")
-            (List.to_seq fn_params)
-            (List.to_seq params);
+            fn_params
+            params;
         let rec f body =
             begin
                 match body with
@@ -212,6 +212,11 @@ and eval env node =
         Hashtbl.add env name node_result;
         node_result
     | _ -> failwith ("eval node not implemented " ^ Parser.to_string node)
+
+let eval_nodes env nodes =
+    List.map
+        (fun node -> eval env node)
+        nodes
 
 let%test_unit "try_eval_int" =
     let env : (string, Parser.node) Hashtbl.t = Hashtbl.create 0 in ();
