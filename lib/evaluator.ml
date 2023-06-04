@@ -242,3 +242,166 @@ let%test_unit "make_operator_handler" =
         (2 / 3);
     ()
 
+let%test_unit "apply" =
+    let env : (string, Parser.node) Hashtbl.t = Hashtbl.create 0 in ();
+
+    (* test `(quote ...)` *)
+    [%test_eq: Parser.node]
+        (apply env (Parser.Symbol "quote") [Parser.Symbol "a"])
+        (Parser.Symbol "a");
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "quote")
+            [Parser.Sequence [
+                Parser.Symbol "+";
+                Parser.Symbol "a";
+                Parser.Symbol "b";
+            ]])
+        (Parser.Sequence [
+            Parser.Symbol "+";
+            Parser.Symbol "a";
+            Parser.Symbol "b";
+            ]);
+
+    (* test `(cons ...)` *)
+    [%test_eq: Parser.node]
+        (apply env (Parser.Symbol "cons") [Parser.NumberInt 1; Parser.NumberInt 2])
+        (Parser.Pair (Parser.NumberInt 1, Parser.NumberInt 2));
+
+    (* test `(car ...)` *)
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "car")
+            [Parser.Quote (Parser.Pair (Parser.NumberInt 1, Parser.NumberInt 2))])
+        (Parser.NumberInt 1);
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "car")
+            [Parser.Sequence [
+                Parser.Symbol "cons";
+                Parser.NumberInt 1;
+                Parser.NumberInt 2;
+            ]])
+        (Parser.NumberInt 1);
+
+    (* test `(cdr ...)` *)
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "cdr")
+            [Parser.Quote (Parser.Pair (Parser.NumberInt 1, Parser.NumberInt 2))])
+        (Parser.NumberInt 2);
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "cdr")
+            [Parser.Sequence [
+                Parser.Symbol "cons";
+                Parser.NumberInt 1;
+                Parser.NumberInt 2;
+            ]])
+        (Parser.NumberInt 2);
+
+    (* test `+`, `-`, `*`, and `/` *)
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "+")
+            [
+                Parser.NumberInt 1;
+                Parser.NumberInt 2;
+                Parser.NumberInt 3;
+            ])
+        (Parser.NumberInt 6);
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "-")
+            [
+                Parser.NumberInt 1;
+                Parser.NumberInt 2;
+                Parser.NumberInt 3;
+            ])
+        (Parser.NumberInt (-4));
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "*")
+            [
+                Parser.NumberInt 1;
+                Parser.NumberInt 2;
+                Parser.NumberInt 3;
+                Parser.NumberInt 4;
+            ])
+        (Parser.NumberInt 24);
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "/")
+            [
+                Parser.NumberInt 2;
+                Parser.NumberInt 2;
+            ])
+        (Parser.NumberInt 1);
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "/")
+            [
+                Parser.NumberInt 2;
+                Parser.NumberInt 3;
+            ])
+        (Parser.NumberInt 0);
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "/")
+            [
+                Parser.NumberInt 4;
+                Parser.NumberInt 2;
+            ])
+        (Parser.NumberInt 2);
+
+    (* test `(= ...)` *)
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "=")
+            [
+                Parser.NumberInt 4;
+                Parser.NumberInt 2;
+            ])
+        (Parser.Bool false);
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Symbol "=")
+            [
+                Parser.NumberInt 3;
+                Parser.NumberInt 3;
+                Parser.NumberInt 3;
+            ])
+        (Parser.Bool true);
+
+    (* test applying function `((lambda ...) ...)` *)
+    [%test_eq: Parser.node]
+        (apply
+            env
+            (Parser.Func (
+                [Parser.Symbol "x"],
+                [Parser.Sequence [
+                    Parser.Symbol "+";
+                    Parser.Symbol "x";
+                    Parser.NumberInt 1;
+                ]])
+            )
+            [
+                Parser.NumberInt 2;
+            ])
+        (Parser.NumberInt 3);
+
+    ()
+
