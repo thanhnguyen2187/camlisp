@@ -99,6 +99,6 @@ dune test
   - [x] `Evaluator.is_self_eval`
   - [x] `Evaluator.try_eval_int`
   - [x] `Evaluator.make_operator_handler`
-  - [ ] `Evaluator.apply`
+  - [x] `Evaluator.apply`
   - [ ] `Evaluator.eval`
 
