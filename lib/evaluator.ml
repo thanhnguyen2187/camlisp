@@ -417,3 +417,65 @@ let%test_unit "apply" =
 
     ()
 
+let%test_unit "eval" =
+    let env : (string, Parser.node) Hashtbl.t = Hashtbl.create 0 in ();
+
+    (* test self evaluated node *)
+    [%test_eq: Parser.node]
+        (eval env (Parser.NumberInt 3))
+        (Parser.NumberInt 3);
+    [%test_eq: Parser.node]
+        (eval env (Parser.String_ "abc"))
+        (Parser.String_ "abc");
+
+    (* test let expression *)
+    [%test_eq: Parser.node]
+        (eval env
+            (Parser.Let
+                ([Parser.Sequence [Parser.Symbol "x"; Parser.NumberInt 1]],
+                [Parser.Symbol "x"])))
+        (Parser.NumberInt 1);
+
+    (* test if expression *)
+    [%test_eq: Parser.node]
+        (eval env
+            (Parser.If (Parser.Bool true, Parser.NumberInt 1, Parser.NumberInt 2)))
+        (Parser.NumberInt 1);
+
+    (* test symbol *)
+    let test_eval_symbol_env = Hashtbl.create 1 in
+    let _ = apply
+        test_eval_symbol_env
+        (Parser.Symbol "set!")
+        [Parser.Symbol "x"; Parser.NumberInt 1]
+    in
+    [%test_eq: Parser.node]
+        (eval
+            test_eval_symbol_env
+            (Parser.Symbol "x"))
+        (Parser.NumberInt 1);
+
+    (* test quote *)
+    [%test_eq: Parser.node]
+        (eval
+            env
+            (Parser.Quote (Parser.Sequence [Parser.Symbol "+"; Parser.Symbol "x"; Parser.NumberInt 1])))
+        (Parser.Sequence [Parser.Symbol "+"; Parser.Symbol "x"; Parser.NumberInt 1]);
+
+    (* test sequence *)
+    [%test_eq: Parser.node]
+        (eval
+            env
+            (Parser.Sequence [Parser.Symbol "+"; Parser.NumberInt 1; Parser.NumberInt 1]))
+        (Parser.NumberInt 2);
+
+    (* test define *)
+    (* TODO: test (define (f x) ...) *)
+    let test_eval_define_env = Hashtbl.create 1 in
+    [%test_eq: Parser.node]
+        (eval
+            test_eval_define_env
+            (Parser.Define ("x", Parser.NumberInt 1)))
+        (Parser.NumberInt 1);
+
+    ()
