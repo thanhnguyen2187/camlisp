@@ -305,6 +305,18 @@ let%test_unit "apply" =
             ]])
         (Parser.NumberInt 2);
 
+    (* test `(set! ...)` *)
+    let test_set_env = Hashtbl.create 1 in
+    [%test_eq: Parser.node]
+        (apply
+            test_set_env
+            (Parser.Symbol "set!")
+            [Parser.Symbol "x"; Parser.NumberInt 1])
+        (Parser.NumberInt 1);
+    [%test_eq: Parser.node]
+        (Hashtbl.find test_set_env "x")
+        (Parser.NumberInt 1);
+
     (* test `+`, `-`, `*`, and `/` *)
     [%test_eq: Parser.node]
         (apply
