@@ -85,7 +85,7 @@ dune test
   error
 - [ ] Implement a "proper" CLI experience that has two modes: interactive (REPL)
   and file interpreting (file path as argument)
-- [ ] Add tests
+- [x] Add tests
   - [x] `Tokenizer.is_balance`
   - [x] `Tokenizer.tokenize`
   - [x] `Parser.parse_expr`
@@ -100,5 +100,5 @@ dune test
   - [x] `Evaluator.try_eval_int`
   - [x] `Evaluator.make_operator_handler`
   - [x] `Evaluator.apply`
-  - [ ] `Evaluator.eval`
+  - [x] `Evaluator.eval`
 
