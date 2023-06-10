@@ -51,6 +51,115 @@ let%test_unit "is_self_eval" =
         false;
     ()
 
+let transform_dot_params
+    (params : Parser.node list)
+    : (int * Parser.node list) =
+    let rec recur index params result =
+        match params with
+        | Parser.Symbol "." :: final_param :: [] -> index, final_param :: result
+        | param :: rest_params -> recur (index + 1) rest_params (param :: result)
+        | [] -> -1, result
+    in
+    let result_index, result_params = recur 0 params [] in
+    result_index, List.rev result_params
+let%test_unit "transform_dot_params" =
+    [%test_eq: int * Parser.node list]
+        (transform_dot_params [])
+        (-1, []);
+    [%test_eq: int * Parser.node list]
+        (transform_dot_params [
+            Parser.Symbol "x";
+            Parser.Symbol "y";
+            Parser.Symbol "z";
+        ])
+        (-1, [
+            Parser.Symbol "x";
+            Parser.Symbol "y";
+            Parser.Symbol "z";
+        ]);
+    [%test_eq: int * Parser.node list]
+        (transform_dot_params [
+            Parser.Symbol "x";
+            Parser.Symbol ".";
+            Parser.Symbol "xs";
+        ])
+        (1, [
+            Parser.Symbol "x";
+            Parser.Symbol "xs";
+        ]);
+    ()
+
+let transform_dot_args
+    (dot_param_index : int)
+    (args : Parser.node list)
+    : Parser.node list =
+    if dot_param_index = -1
+    then args
+    else
+        let rec recur index args result =
+            match args with
+            | [] -> result
+            | arg :: rest_args when index < dot_param_index ->
+                recur (index + 1) rest_args (arg :: result)
+            | arg :: rest_args when index = dot_param_index ->
+                recur (index + 1) rest_args ((Parser.Sequence [arg]) :: result)
+            | arg :: rest_args when index > dot_param_index ->
+                begin
+                    match result with
+                    | (Parser.Sequence args_) :: rest_result ->
+                        recur (index + 1) rest_args ((Parser.Sequence (arg :: args_)) :: rest_result)
+                    | _ -> failwith "transform_dot_params unreachable case 1"
+                end
+            (* | _ -> result *)
+            | _ -> failwith "transform_dot_params unreachable case 2"
+        in
+        let result = recur 0 args [] in
+        match result with
+        | (Parser.Sequence vargs) :: args ->
+            vargs
+            |> List.rev
+            |> (fun nodes -> Parser.Sequence nodes)
+            |> (fun node -> List.cons node args)
+            |> List.rev
+        | [] -> []
+        | _ -> failwith "transform_dot_params unreachable case 3"
+let%test_unit "transform_dot_args" =
+    [%test_eq: Parser.node list]
+        (transform_dot_args (-1) [
+            Parser.NumberInt 1;
+            Parser.NumberInt 2;
+        ])
+        [
+            Parser.NumberInt 1;
+            Parser.NumberInt 2;
+        ];
+
+    [%test_eq: Parser.node list]
+        (transform_dot_args 2 [
+            Parser.NumberInt 1;
+            Parser.NumberInt 2;
+            (* should start accumulating from this *)
+            Parser.NumberInt 3; 
+            Parser.NumberInt 4;
+            Parser.NumberInt 5;
+        ])
+        [
+            Parser.NumberInt 1;
+            Parser.NumberInt 2;
+            Parser.Sequence [
+                Parser.NumberInt 3;
+                Parser.NumberInt 4;
+                Parser.NumberInt 5;
+            ];
+        ];
+
+    [%test_eq: Parser.node list]
+        (transform_dot_args 1 [
+            Parser.NumberInt 1;
+        ])
+        [];
+    ()
+
 let rec try_eval_int env node =
     let result = eval env node in
     match result with
@@ -142,14 +251,20 @@ and apply env proc args =
     | Parser.Func(params, body) ->
         (* TODO: optimize by looking at the way `Hashtbl.add` works *)
         let new_env = Hashtbl.copy env in
+        let dot_index, params_ = transform_dot_params params in
+        let args_evaluated = List.map
+            (fun arg -> eval env arg)
+            args
+        in
+        let args_ = transform_dot_args dot_index args_evaluated in
         List.iter2
-            (fun fn_param arg ->
-                match fn_param with
+            (fun param arg ->
+                match param with
                 | Parser.Symbol(fn_param_sym) ->
-                    Hashtbl.add new_env fn_param_sym (eval env arg)
+                    Hashtbl.add new_env fn_param_sym arg
                 | _ -> failwith "apply error")
-            params
-            args;
+            params_
+            args_;
         let rec f body =
             begin
                 match body with
