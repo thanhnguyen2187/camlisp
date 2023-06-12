@@ -155,6 +155,8 @@ let parse_define nodes =
     match nodes with
     | Symbol "define" :: Symbol name :: node :: [] ->
         Define (name, node)
+    | Symbol "define" :: Pair (Symbol name, var_params) :: body ->
+        Define (name, Func ([Symbol "."; var_params], body))
     | Symbol "define" :: Sequence ((Symbol name) :: params) :: body ->
         Define (name, Func (params, body))
     | _ ->
@@ -168,6 +170,36 @@ let%test_unit "parse_define" =
             NumberInt 1;
         ])
         (Define ("x", NumberInt 1)));
+
+    ([%test_eq: node]
+        (parse_define
+        [
+            Symbol "define";
+            Pair (Symbol "f", Symbol "xs");
+            Symbol "xs";
+        ])
+        (Define (
+            "f",
+            Func ([Symbol "."; Symbol "xs"],
+            [Symbol "xs"]))));
+
+    ([%test_eq: node]
+        (parse_define
+        [
+            Symbol "define";
+            (Sequence [
+                Symbol "f";
+                Symbol "x"; Symbol "."; Symbol "xs";
+            ]);
+            Symbol "xs";
+        ])
+        (Define (
+            "f",
+            Func ([
+                Symbol "x"; Symbol "."; Symbol "xs";
+            ],
+            [Symbol "xs"]))));
+
     ([%test_eq: node]
         (parse_define
         [
