@@ -73,7 +73,7 @@ dune test
 - [x] Implement `lambda`
   - [x] Add dot notation
 - [x] Implement `define`
-  - [ ] Add dot notation
+  - [x] Add dot notation
 - [x] Implement `cons`, `car` and `cdr`
 - [x] Implement `quote`
 - [x] Implement `let` and `let*` (done since `let` acts like `let*` in this case
