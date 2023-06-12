@@ -155,6 +155,8 @@ let parse_define nodes =
     match nodes with
     | Symbol "define" :: Symbol name :: node :: [] ->
         Define (name, node)
+    | Symbol "define" :: Pair (Symbol name, var_params) :: body ->
+        Define (name, Func ([Symbol "."; var_params], body))
     | Symbol "define" :: Sequence ((Symbol name) :: params) :: body ->
         Define (name, Func (params, body))
     | _ ->
