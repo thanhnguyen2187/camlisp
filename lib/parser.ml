@@ -119,6 +119,8 @@ let parse_lambda nodes =
     match nodes with
     | Symbol "lambda" :: Sequence params :: body ->
         Func (params, body)
+    | Symbol "lambda" :: Pair (param_1, param_2) :: body ->
+        Func ([param_1; Symbol "."; param_2], body)
     | _ -> failwith ("parse_lambda received an invalid node " ^ to_string_nodes nodes true)
 let%test_unit "parse_lambda" =
     ([%test_eq: node]
@@ -129,6 +131,24 @@ let%test_unit "parse_lambda" =
             Symbol "x"
         ])
         (Func ([Symbol "x"], [Symbol "x"])));
+    ([%test_eq: node]
+        (parse_lambda
+        [
+            Symbol "lambda";
+            Sequence [
+                Symbol "x";
+                Symbol ".";
+                Symbol "xs";
+            ];
+            Symbol "xs"
+        ])
+        (Func ([
+            Symbol "x";
+            Symbol ".";
+            Symbol "xs";
+        ], [
+            Symbol "xs"
+        ])));
     ()
 
 let parse_define nodes =
@@ -201,16 +221,16 @@ let rec parse_one curr tokens =
         (* TODO: optimize this non-recursive tail call *)
         let result, rest_tokens = parse_one (Sequence []) rest_tokens in
         Quote result, rest_tokens
-    | Sequence (nodes), Tokenizer.Word(expr) :: rest_tokens ->
+    | Sequence nodes, Tokenizer.Word expr :: rest_tokens ->
         let node = parse_expr expr in
         parse_one (Sequence (nodes @ [node])) rest_tokens
-    | Sequence (nodes), Tokenizer.OpeningBracket :: rest_tokens ->
+    | Sequence nodes, Tokenizer.OpeningBracket :: rest_tokens ->
         let appl, rest_tokens = parse_one (Sequence []) rest_tokens in
         parse_one (Sequence (nodes @ [appl])) rest_tokens
     | Sequence nodes, Tokenizer.QuotedOpeningBracket :: rest_tokens ->
         let appl, rest_tokens = parse_one (Sequence []) rest_tokens in
         parse_one (Sequence (nodes @ [Quote appl])) rest_tokens
-    | Sequence (nodes), Tokenizer.ClosingBracket :: rest_tokens ->
+    | Sequence nodes, Tokenizer.ClosingBracket :: rest_tokens ->
         begin
             match nodes with
             | Symbol "define" :: _ -> (parse_define nodes), rest_tokens
