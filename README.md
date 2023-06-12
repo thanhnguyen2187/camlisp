@@ -71,7 +71,7 @@ dune test
     and `float`
   - [ ] Find a strategy to turn the operators into a "normal" `Func`?
 - [x] Implement `lambda`
-  - [ ] Add dot notation
+  - [x] Add dot notation
 - [x] Implement `define`
   - [ ] Add dot notation
 - [x] Implement `cons`, `car` and `cdr`
