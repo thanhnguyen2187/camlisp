@@ -170,6 +170,36 @@ let%test_unit "parse_define" =
             NumberInt 1;
         ])
         (Define ("x", NumberInt 1)));
+
+    ([%test_eq: node]
+        (parse_define
+        [
+            Symbol "define";
+            Pair (Symbol "f", Symbol "xs");
+            Symbol "xs";
+        ])
+        (Define (
+            "f",
+            Func ([Symbol "."; Symbol "xs"],
+            [Symbol "xs"]))));
+
+    ([%test_eq: node]
+        (parse_define
+        [
+            Symbol "define";
+            (Sequence [
+                Symbol "f";
+                Symbol "x"; Symbol "."; Symbol "xs";
+            ]);
+            Symbol "xs";
+        ])
+        (Define (
+            "f",
+            Func ([
+                Symbol "x"; Symbol "."; Symbol "xs";
+            ],
+            [Symbol "xs"]))));
+
     ([%test_eq: node]
         (parse_define
         [
