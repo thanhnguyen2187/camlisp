@@ -95,6 +95,8 @@ let transform_dot_args
     : Parser.node list =
     if dot_param_index = -1
     then args
+    else if dot_param_index = List.length args
+    then List.append args [Parser.Sequence []]
     else
         let rec recur index args result =
             match args with
@@ -121,7 +123,6 @@ let transform_dot_args
             |> (fun nodes -> Parser.Sequence nodes)
             |> (fun node -> List.cons node args)
             |> List.rev
-        | [] -> []
         | _ -> failwith "transform_dot_params unreachable case 3"
 let%test_unit "transform_dot_args" =
     [%test_eq: Parser.node list]
@@ -157,7 +158,10 @@ let%test_unit "transform_dot_args" =
         (transform_dot_args 1 [
             Parser.NumberInt 1;
         ])
-        [];
+        [
+            Parser.NumberInt 1;
+            Parser.Sequence [];
+        ];
     ()
 
 let rec try_eval_int env node =
@@ -257,6 +261,12 @@ and apply env proc args =
             args
         in
         let args_ = transform_dot_args dot_index args_evaluated in
+        (* TODO: handle invalid arity case *)
+        if List.length params_ != List.length args_
+        then failwith
+            (Format.sprintf
+                "invalid argument count: expected %d; got %d"
+                (List.length params_) (List.length args_));
         List.iter2
             (fun param arg ->
                 match param with
