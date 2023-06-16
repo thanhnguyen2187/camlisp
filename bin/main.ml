@@ -14,12 +14,7 @@ let rec read_eval_print env state curr =
         then read_eval_print env Done expr
         else read_eval_print env (Prompting "..") expr
     | Done ->
-        Tokenizer.tokenize curr
-        (* |> List.map Tokenizer.to_string *)
-        (* |> List.iter print_string *)
-        (* |> print_newline *)
-        |> Parser.parse
-        |> Evaluator.eval_nodes env
+        Evaluator.eval_str env curr
         |> List.map Parser.to_string
         |> List.iter
             (fun node_string ->
