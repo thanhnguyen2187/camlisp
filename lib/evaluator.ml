@@ -338,11 +338,6 @@ and eval env node =
         node_result
     | _ -> failwith ("eval node not implemented " ^ Parser.to_string node)
 
-let eval_nodes env nodes =
-    List.map
-        (fun node -> eval env node)
-        nodes
-
 let%test_unit "try_eval_int" =
     let env : (string, Parser.node) Hashtbl.t = Hashtbl.create 0 in ();
     (* TODO: test for failure *)
@@ -604,3 +599,51 @@ let%test_unit "eval" =
         (Parser.NumberInt 1);
 
     ()
+
+let eval_nodes env nodes =
+    List.map
+        (fun node -> eval env node)
+        nodes
+
+let%test_unit "eval_nodes" =
+    let env : (string, Parser.node) Hashtbl.t = Hashtbl.create 0 in ();
+    [%test_eq: Parser.node list]
+        (eval_nodes
+            env
+            [])
+        [];
+
+    [%test_eq: Parser.node list]
+        (eval_nodes
+            env
+            [
+                Parser.NumberInt 1;
+                Parser.NumberInt 2;
+            ])
+        [
+            Parser.NumberInt 1;
+            Parser.NumberInt 2;
+        ];
+
+    [%test_eq: Parser.node list]
+        (eval_nodes
+            env
+            [
+                Parser.Sequence [
+                    Parser.Symbol "+";
+                    Parser.NumberInt 1;
+                    Parser.NumberInt 2;
+                ];
+                Parser.Sequence [
+                    Parser.Symbol "+";
+                    Parser.NumberInt 3;
+                    Parser.NumberInt 4;
+                ];
+            ])
+        [
+            Parser.NumberInt 3;
+            Parser.NumberInt 7;
+        ];
+
+    ()
+
