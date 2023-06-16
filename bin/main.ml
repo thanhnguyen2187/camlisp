@@ -10,6 +10,8 @@ let rec read_eval_print env state curr =
         print_string (characters ^ " ");
         let line = read_line () in
         let expr = curr ^ " " ^ line in
+        (* TODO: handle the case where prompting gets into an infinite loop when
+                 there are redundant closing brackets *)
         if Tokenizer.is_balanced expr
         then read_eval_print env Done expr
         else read_eval_print env (Prompting "..") expr
