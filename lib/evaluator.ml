@@ -647,6 +647,8 @@ let%test_unit "eval_nodes" =
 
     ()
 
+(* TODO: consider if the return type should also be a string,
+         and should we somehow find a way not to "leak" `env` out *)
 let eval_str env input =
     Tokenizer.tokenize input
     |> Parser.parse
