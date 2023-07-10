@@ -23,8 +23,37 @@ let rec read_eval_print env state curr =
                 print_string node_string;
                 print_newline ())
 
+let usage_msg = {|camlisp
+
+A simple Lisp/Scheme interpreter in OCaml.
+
+Sample usages:
+  
+  # start an interactive REPL
+  camlisp
+  # or specify `--interactive`
+  camlisp --interactive
+
+  # evaluate each files
+  camlisp --files /tmp/a.scm /tmp/b.scm
+
+Arguments:
+|}
+let files_str = ref ""
+let interactive = ref true
+let dummy = ref ""
+let specialist = [
+    ("--files       ", Arg.Set_string files_str, "Files to be evaluated");
+    ("--interactive ", Arg.Set interactive, "Start the REPL");
+    ("--help", Arg.Set_string dummy, "");
+    ("-help", Arg.Set_string dummy, "");
+]
+
 let () =
-let env = Evaluator.default_env in
-while true do
-    read_eval_print env (Prompting "=>") ""
-done
+    Arg.parse specialist (function _ -> ()) usage_msg;
+    if !interactive
+    then
+        let env = Evaluator.default_env in
+        while true do
+            read_eval_print env (Prompting "=>") ""
+        done
