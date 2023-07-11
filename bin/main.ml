@@ -17,7 +17,6 @@ let rec read_eval_print env state curr =
         else read_eval_print env (Prompting "..") expr
     | Done ->
         Evaluator.eval_str env curr
-        |> List.map Parser.to_string
         |> List.iter
             (fun node_string ->
                 print_string node_string;
