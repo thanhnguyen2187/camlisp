@@ -75,6 +75,7 @@ let print_all usage_msg speclist =
         (fun (arg, _, desc) ->
             print_string "  ";
             print_string arg;
+            print_string " ";
             print_endline desc;
         )
         speclist
@@ -84,6 +85,12 @@ let print_all usage_msg speclist =
 let rec speclist : speclist_t = [
     ("--files", Arg.Set_string files_str, "Files to be evaluated");
     ("--interactive", Arg.Set interactive, "Start the REPL");
-    ("--help", Arg.Unit (fun () -> print_all usage_msg (reformat_arguments speclist)), "");
-    ("-help", Arg.Unit (fun () -> print_all usage_msg (reformat_arguments speclist)), "");
+    ("--help", Arg.Unit (fun () ->
+        print_all usage_msg (reformat_arguments speclist);
+        raise (Arg.Help "");
+    ), "");
+    ("-help", Arg.Unit (fun () ->
+        print_all usage_msg (reformat_arguments speclist);
+        raise (Arg.Help "");
+    ), "");
 ]
