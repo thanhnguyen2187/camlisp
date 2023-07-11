@@ -1,4 +1,4 @@
-type specialist_t = (string * Arg.spec * string) list
+type speclist_t = (string * Arg.spec * string) list
 
 let repeat_str s n =
     let rec iterate s result n =
@@ -30,7 +30,7 @@ let repeat_str s n =
     Instead of modifying the arguments ([--arg1] and [--arg2]), this way is chosen
     since adding spaces to the arguments render them not working. ([arg1] does
     work, while [arg1   ] does not). *)
-let reformat_arguments (specialist : specialist_t) : specialist_t =
+let reformat_arguments (speclist : speclist_t) : speclist_t =
     let arg_name_max_width =
         List.fold_left
             (fun curr_max width ->
@@ -40,14 +40,14 @@ let reformat_arguments (specialist : specialist_t) : specialist_t =
             0
             (List.map
                 (fun (arg, _, _) -> String.length arg)
-                specialist)
+                speclist)
     in
     List.map
         (fun (arg, spec, desc) ->
             let padding_length = arg_name_max_width - (String.length arg) in
             let padded_desc = repeat_str " " padding_length in
             (arg, spec, padded_desc ^ " " ^ desc))
-        specialist
+        speclist
 
 let usage_msg = {|camlisp
 
@@ -67,10 +67,23 @@ Arguments:
 |}
 let files_str = ref ""
 let interactive = ref true
-let dummy = ref ""
-let specialist : specialist_t = [
+(* this is needed since `Arg` does not expose a way to print `usage_msg` along
+   with `speclist` *)
+let print_all usage_msg speclist =
+    print_endline usage_msg;
+    List.iter
+        (fun (arg, _, desc) ->
+            print_string "  ";
+            print_string arg;
+            print_endline desc;
+        )
+        speclist
+
+(* TODO: replace `Arg` with something else, as trying to pretty print the
+         arguments makes the code needlessly complicated. *)
+let rec speclist : speclist_t = [
     ("--files", Arg.Set_string files_str, "Files to be evaluated");
     ("--interactive", Arg.Set interactive, "Start the REPL");
-    ("--help", Arg.Set_string dummy, "");
-    ("-help", Arg.Set_string dummy, "");
+    ("--help", Arg.Unit (fun () -> print_all usage_msg (reformat_arguments speclist)), "");
+    ("-help", Arg.Unit (fun () -> print_all usage_msg (reformat_arguments speclist)), "");
 ]
