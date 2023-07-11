@@ -653,41 +653,42 @@ let eval_str env input =
     Tokenizer.tokenize input
     |> Parser.parse
     |> eval_nodes env
+    |> List.map Parser.to_string
 
 let%test_unit "eval_str" =
     let env : (string, Parser.node) Hashtbl.t = Hashtbl.create 0 in ();
-    [%test_eq: Parser.node list]
+    [%test_eq: string list]
         (eval_str
             env
             "")
         [];
 
-    [%test_eq: Parser.node list]
+    [%test_eq: string list]
         (eval_str
             env
             "1 2 3")
         [
-            Parser.NumberInt 1;
-            Parser.NumberInt 2;
-            Parser.NumberInt 3;
+            "1";
+            "2";
+            "3";
         ];
 
-    [%test_eq: Parser.node list]
+    [%test_eq: string list]
         (eval_str
             env
             "(+ 1 2)")
         [
-            Parser.NumberInt 3;
+            "3";
         ];
 
     let env_1 = Hashtbl.create 1 in
     let _ = eval_str env_1 "(define (f x) (+ x 3))" in
-    [%test_eq: Parser.node list]
+    [%test_eq: string list]
         (eval_str
             env_1
             "(f 3)")
         [
-            Parser.NumberInt 6;
+            "6";
         ];
 
     let env_2 = Hashtbl.create 1 in
@@ -695,12 +696,12 @@ let%test_unit "eval_str" =
         env_2
         "(define (fact n) (if (= n 1) 1 (* n (fact (- n 1)))))"
     in
-    [%test_eq: Parser.node list]
+    [%test_eq: string list]
         (eval_str
             env_2
             "(fact 5)")
         [
-            Parser.NumberInt 120;
+            "120";
         ];
 
     ()
