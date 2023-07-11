@@ -28,7 +28,7 @@ let repeat_str s n =
     ]}
 
     Instead of modifying the arguments ([--arg1] and [--arg2]), this way is chosen
-    since adding spaces to the arguments render them not working. ([arg1] does
+    since adding spaces to the arguments render them not working ([arg1] does
     work, while [arg1   ] does not). *)
 let reformat_arguments (speclist : speclist_t) : speclist_t =
     let arg_name_max_width =
