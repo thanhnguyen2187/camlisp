@@ -59,14 +59,22 @@ Sample usages:
   camlisp
   # or specify `--interactive`
   camlisp --interactive
+  # with some files preloaded
+  camlisp --interactive /tmp/a.scm /tmp/b.scm
 
-  # evaluate each files
-  camlisp --files /tmp/a.scm /tmp/b.scm
+  # compile some files to `output.ml`
+  camlisp --compile /tmp/a.scm /tmp/b.scm
+  # specify the target file name
+  camlisp \
+      --compile /tmp/a.scm /tmp/b.scm \
+      --output other_output.ml
 
 Arguments:
 |}
-let files_str = ref ""
-let interactive = ref true
+let file_paths : string list ref = ref []
+let compile = ref false
+let output = ref "output.ml"
+let interactive = ref false
 (* this is needed since `Arg` does not expose a way to print `usage_msg` along
    with `speclist` *)
 let print_all usage_msg speclist =
@@ -80,11 +88,16 @@ let print_all usage_msg speclist =
         )
         speclist
 
+let handle_path path =
+    file_paths := (List.append !file_paths [path]);
+    ()
+
 (* TODO: replace `Arg` with something else, as trying to pretty print the
          arguments makes the code needlessly complicated. *)
 let rec speclist : speclist_t = [
-    ("--files", Arg.Set_string files_str, "Files to be evaluated");
     ("--interactive", Arg.Set interactive, "Start the REPL");
+    ("--compile", Arg.Set compile, "Compile the input files");
+    ("--output", Arg.Set_string output , "Compilation output file path; defaults to output.ml");
     ("--help", Arg.Unit (fun () ->
         print_all usage_msg (reformat_arguments speclist);
         raise (Arg.Help "");
