@@ -83,8 +83,10 @@ dune test
 - [ ] Research how to release/distribute the built binary
 - [ ] Improve error handling by separating user's error to internal evaluator
   error
-- [ ] Implement a "proper" CLI experience that has two modes: interactive (REPL)
-  and file interpreting (file path as argument)
+- [ ] Implement a "proper" CLI experience:
+  - [x] Interactive mode `--interactive`
+  - [ ] Interactive mode with files preloading
+  - [ ] Compiling
 - [x] Add tests
   - [x] `Tokenizer.is_balance`
   - [x] `Tokenizer.tokenize`
